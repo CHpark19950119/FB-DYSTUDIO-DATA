@@ -180,18 +180,21 @@ JSON 형식으로 응답:
     
     // 통역 평가 요청
     async getInterpretationFeedback(original, userInterpretation, direction = 'en-ko', usePremium = false) {
+        const sourceLang = direction === 'en-ko' ? '영어' : '한국어';
+        const targetLang = direction === 'en-ko' ? '한국어' : '영어';
+        
         const prompt = `당신은 통번역대학원 교수로서 학생의 통역을 평가합니다.
 
-【원문 (영어)】
+【원문 (${sourceLang})】
 "${original}"
 
-【학습자 통역 (한국어)】
+【학습자 통역 (${targetLang})】
 "${userInterpretation}"
 
 【평가 기준】
 1. 완성도 (40점): 원문의 핵심 정보가 모두 전달되었는가
 2. 정확성 (30점): 오역이나 왜곡 없이 정확한가
-3. 유창성 (30점): 자연스럽고 유창한 한국어인가
+3. 유창성 (30점): 자연스럽고 유창한 ${targetLang}인가
 
 JSON 형식으로만 응답하세요:
 {
@@ -220,7 +223,7 @@ JSON 형식으로만 응답하세요:
         throw new Error('URL 직접 접근 불가. 기사 내용을 복사해서 "직접 입력"을 사용하세요.');
     },
     
-    // 직접 입력된 텍스트로 기사 생성 (원문 유지, 번역만 GPT)
+    // 직접 입력된 텍스트로 기사 생성 (원문 유지, 번역만 AI)
     async createArticleFromText(title, content, isKorean = false) {
         const prompt = isKorean 
             ? `다음 한국어 기사를 영어로 번역하고 핵심 용어를 추출하세요.
@@ -528,32 +531,123 @@ const TTS = {
     isSpeaking() { return this.speaking; }
 };
 
-// ===== STT =====
+// ===== STT (OpenAI Whisper via Firebase Functions) =====
 const STT = {
     recognition: null,
     isListening: false,
+    mediaRecorder: null,
+    audioChunks: [],
+    onResultCallback: null,
+    onEndCallback: null,
+    
+    WHISPER_URL: 'https://us-central1-dayoung-studio.cloudfunctions.net/whisperSTT',
+    
+    // 호환성: 기존 init() 유지
     init() {
-        if ('webkitSpeechRecognition' in window) {
-            this.recognition = new webkitSpeechRecognition();
-            this.recognition.continuous = false;
-            this.recognition.interimResults = true;
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             return true;
         }
         return false;
     },
-    start(lang = 'ko-KR', onResult, onEnd) {
-        if (!this.recognition && !this.init()) { alert('음성 인식 미지원'); return; }
-        this.recognition.lang = lang;
-        this.recognition.onresult = (e) => { 
-            const t = Array.from(e.results).map(r => r[0].transcript).join(''); 
-            onResult(t, e.results[0].isFinal); 
-        };
-        this.recognition.onend = () => { this.isListening = false; if (onEnd) onEnd(); };
-        this.recognition.onerror = (e) => { console.error('STT Error:', e.error); this.isListening = false; };
-        this.recognition.start();
-        this.isListening = true;
+    
+    // 녹음 시작
+    async start(lang = 'ko-KR', onResult, onEnd) {
+        if (this.isListening) return;
+        
+        this.onResultCallback = onResult;
+        this.onEndCallback = onEnd;
+        this.audioChunks = [];
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            
+            this.mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) this.audioChunks.push(e.data);
+            };
+            
+            this.mediaRecorder.onstop = async () => {
+                // 마이크 스트림 정리
+                stream.getTracks().forEach(t => t.stop());
+                
+                if (this.audioChunks.length === 0) {
+                    if (onEnd) onEnd();
+                    return;
+                }
+                
+                // 오디오 → base64
+                const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                const base64 = await this._blobToBase64(blob);
+                
+                // 중간 상태 알림
+                if (onResult) onResult('🔄 Whisper 변환 중...', false);
+                
+                // Whisper API 호출
+                try {
+                    const text = await this._callWhisper(base64, lang.startsWith('ko') ? 'ko' : 'en');
+                    if (text && onResult) {
+                        onResult(text, true);
+                    } else if (onResult) {
+                        onResult('(인식 결과 없음)', true);
+                    }
+                } catch (err) {
+                    console.error('Whisper STT error:', err);
+                    if (onResult) onResult('(음성 인식 실패: ' + err.message + ')', true);
+                }
+                
+                this.isListening = false;
+                if (onEnd) onEnd();
+            };
+            
+            this.mediaRecorder.start();
+            this.isListening = true;
+            console.log('🎙️ Whisper 녹음 시작');
+        } catch (err) {
+            console.error('마이크 접근 오류:', err);
+            this.isListening = false;
+            if (onResult) onResult('(마이크 접근 실패)', true);
+            if (onEnd) onEnd();
+        }
     },
-    stop() { if (this.recognition && this.isListening) { this.recognition.stop(); this.isListening = false; } }
+    
+    // 녹음 중지
+    stop() {
+        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.mediaRecorder.stop();
+            console.log('🎙️ Whisper 녹음 중지');
+        }
+        this.isListening = false;
+    },
+    
+    // Whisper API 호출
+    async _callWhisper(base64Audio, language) {
+        const response = await fetch(this.WHISPER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audio: base64Audio, language: language })
+        });
+        
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Whisper API ${response.status}: ${errText}`);
+        }
+        
+        const data = await response.json();
+        return data.text || '';
+    },
+    
+    // Blob → base64 변환
+    _blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
 };
 
 // ===== BGM =====

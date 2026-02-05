@@ -96,6 +96,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateDashboard(); renderGrass();
     checkDailyFortune(); createParticles();
     if (typeof Achievements !== 'undefined') Achievements.checkTimeAchievements();
+    if (typeof Sync !== 'undefined') Sync.init();
+    // 업데이트 알림 (1초 후 표시)
+    setTimeout(checkUpdateNotice, 1000);
     // Firebase Functions로 기사 업데이트 (GitHub 불필요)
 });
 
@@ -137,16 +140,22 @@ function updateExpBar() {
 }
 
 async function loadArticles() {
-    try {
-        // 1차: 로컬 data/articles.json (Firebase Hosting)
-        let res = await fetch('./data/articles.json');
-        if (!res.ok) throw new Error('local fetch failed');
-        const data = await res.json();
+    // 기사 데이터 로드 함수
+    function applyArticles(data) {
         App.articles = data.articles || [];
         App.categories = data.categories || [];
         App.levels = data.levels || [];
         
-        // localStorage의 커스텀 기사 병합 (AI 생성/직접 입력)
+        // 3일 만료 필터 (커스텀/직접입력 제외)
+        const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+        App.articles = App.articles.filter(a => {
+            if (a.source?.includes('AI') || a.source?.includes('직접입력')) return true;
+            if (!a.generatedAt) return true;
+            return (now - new Date(a.generatedAt).getTime()) < THREE_DAYS;
+        });
+        
+        // localStorage의 커스텀 기사 병합
         const custom = JSON.parse(localStorage.getItem('dyts_customArticles') || '[]');
         if (custom.length > 0) {
             const existIds = new Set(App.articles.map(a => a.id));
@@ -156,20 +165,36 @@ async function loadArticles() {
         
         document.getElementById('article-count').textContent = App.articles.length;
         updateRecommended(); updateNewArticles();
+    }
+
+    try {
+        // 1차: Firebase Storage (최신 기사)
+        const storageUrl = 'https://firebasestorage.googleapis.com/v0/b/dayoung-studio.firebasestorage.app/o/data%2Farticles.json?alt=media';
+        let res = await fetch(storageUrl);
+        if (!res.ok) throw new Error('Storage fetch failed');
+        const data = await res.json();
+        console.log('✅ Firebase Storage에서 기사 로드:', data.articles?.length || 0, '개');
+        applyArticles(data);
     } catch (e) {
-        console.warn('로컬 기사 로딩 실패, Functions API 시도:', e.message);
+        console.warn('Storage 로딩 실패, Functions API 시도:', e.message);
         try {
             // 2차: Firebase Functions API
             const res = await fetch('https://us-central1-dayoung-studio.cloudfunctions.net/getArticles');
             const data = await res.json();
-            App.articles = data.articles || [];
-            App.categories = data.categories || [];
-            App.levels = data.levels || [];
-            document.getElementById('article-count').textContent = App.articles.length;
-            updateRecommended(); updateNewArticles();
+            console.log('✅ Functions API에서 기사 로드:', data.articles?.length || 0, '개');
+            applyArticles(data);
         } catch (e2) {
-            console.error('기사 로딩 완전 실패:', e2);
-            showToast('기사 로딩 실패', 'error');
+            console.warn('Functions API 실패, 로컬 fallback:', e2.message);
+            try {
+                // 3차: 로컬 정적 파일
+                const res = await fetch('./data/articles.json');
+                if (!res.ok) throw new Error('local fetch failed');
+                const data = await res.json();
+                applyArticles(data);
+            } catch (e3) {
+                console.error('기사 로딩 완전 실패:', e3);
+                showToast('기사 로딩 실패', 'error');
+            }
         }
     }
 }
@@ -446,13 +471,16 @@ function renderArticles() {
         
         // 날짜/시간
         const dateInfo = getArticleDateInfo(a.generatedAt);
+        const expiryInfo = getArticleExpiry(a);
+        const expiryBadge = expiryInfo ? `<span class="expiry-badge ${expiryInfo.cls}">${expiryInfo.icon} ${expiryInfo.text}</span>` : '';
         
-        return `<div class="article-card">
+        return `<div class="article-card ${expiryInfo?.cls === 'expiry-urgent' ? 'card-expiring' : ''}">
             <div class="article-meta">
                 <span>${ci.icon} ${ci.name}</span>
                 <span>${li.icon} ${li.name}</span>
                 ${hasKorean ? '<span title="한영 번역 가능">🇰🇷</span>' : ''}
                 ${sourceTag}
+                ${expiryBadge}
             </div>
             <h4 class="article-title">${a.title}</h4>
             <p class="article-summary">${(a.summary || a.content?.substring(0, 100) + '...')}</p>
@@ -475,6 +503,28 @@ function renderArticles() {
             </div>
         </div>`;
     }).join('');
+}
+
+// 기사 만료 정보 (3일 기준)
+function getArticleExpiry(article) {
+    // 커스텀/직접입력 기사는 만료 없음
+    if (article.source?.includes('AI') || article.source?.includes('직접입력')) return null;
+    if (!article.generatedAt) return null;
+    
+    const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+    const created = new Date(article.generatedAt).getTime();
+    const expires = created + THREE_DAYS;
+    const remaining = expires - Date.now();
+    
+    if (remaining <= 0) return { icon: '⌛', text: '만료됨', cls: 'expiry-expired' };
+    
+    const hours = Math.floor(remaining / 3600000);
+    const days = Math.floor(hours / 24);
+    const remHours = hours % 24;
+    
+    if (hours <= 6) return { icon: '⏰', text: `${hours}시간 남음`, cls: 'expiry-urgent' };
+    if (hours <= 24) return { icon: '⏰', text: `${hours}시간 남음`, cls: 'expiry-warning' };
+    return { icon: '📅', text: `${days}일 ${remHours}시간 남음`, cls: 'expiry-normal' };
 }
 
 // 기사 날짜 정보
@@ -744,7 +794,7 @@ async function submitTranslation(usePremium = false) {
     const input = document.getElementById('trans-input').value.trim();
     if (!input) { showToast('번역을 입력해주세요', 'warning'); return; }
     
-    const modelName = usePremium ? 'Claude Sonnet 4' : 'GPT-4o-mini';
+    const modelName = usePremium ? 'Claude Opus 4' : 'Claude Sonnet 4';
     showLoading(true, modelName + ' 첨삭 중...');
     
     const p = App.phrases[App.phraseIndex];
@@ -754,9 +804,27 @@ async function submitTranslation(usePremium = false) {
         const fb = await API.getTranslationFeedback(orig, input, App.translateDirection, usePremium);
         App.phraseFeedbacks.push({ original: orig, userTranslation: input, feedback: fb, score: fb.score, model: modelName });
         
+        // 문장별 첨삭 기록 저장
+        saveSentenceFeedback({
+            type: 'translation',
+            articleId: App.currentArticle?.id,
+            articleTitle: App.currentArticle?.title || '',
+            sentenceIndex: App.phraseIndex,
+            original: orig,
+            userTranslation: input,
+            direction: App.translateDirection,
+            score: fb.score,
+            feedback: fb.feedback,
+            modelAnswer: fb.modelAnswer || '',
+            improvements: fb.improvements || [],
+            goodPoints: fb.goodPoints || [],
+            model: modelName,
+            date: new Date().toISOString()
+        });
+        
         const modelBadge = usePremium 
             ? '<span class="model-badge premium">✨ Claude Sonnet 4</span>' 
-            : '<span class="model-badge gpt">🚀 GPT-4o-mini</span>';
+            : '<span class="model-badge gpt">🚀 Claude Sonnet 4</span>';
         
         let analysisHtml = '';
         if (fb.analysis) {
@@ -852,6 +920,21 @@ function finishTranslation() {
     showToast('완료! 평균 ' + avg + '점, +1 티켓');
     navigateTo('dashboard'); 
     updateDashboard();
+    // 자동 동기화
+    if (typeof Sync !== 'undefined') Sync.autoSync();
+}
+
+// 문장별 첨삭 기록 저장
+function saveSentenceFeedback(record) {
+    try {
+        record.id = Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        const history = JSON.parse(localStorage.getItem('dyts_feedback_history') || '[]');
+        history.unshift(record);
+        localStorage.setItem('dyts_feedback_history', JSON.stringify(history.slice(0, 500)));
+        console.log('💾 첨삭 기록 저장:', record.type, record.sentenceIndex, record.score + '점');
+    } catch (e) {
+        console.error('첨삭 기록 저장 실패:', e);
+    }
 }
 
 function addTermToVocab(en, ko) { Storage.addWord({ english: en, korean: ko }); showToast('"' + en + '" 추가됨'); }
@@ -861,7 +944,8 @@ const InterpretApp = {
     stage: 1,
     currentPhrase: null,
     phraseIndex: 0,
-    results: []
+    results: [],
+    direction: 'en-ko' // 'en-ko' = 영→한, 'ko-en' = 한→영
 };
 
 function setupInterpretation(a) {
@@ -881,8 +965,58 @@ function setupInterpretation(a) {
     InterpretApp.phraseIndex = 0;
     InterpretApp.results = [];
     InterpretApp.stage = 1;
+    InterpretApp.direction = 'en-ko'; // 기본값: 영→한
+    
+    // 통역 방향 전환 UI 삽입
+    const hasKorean = !!koContent;
+    let dirContainer = document.getElementById('interp-direction-toggle');
+    if (!dirContainer) {
+        // 요소가 없으면 interp-content 상단에 동적 생성
+        const interpContent = document.getElementById('interp-content');
+        if (interpContent) {
+            const div = document.createElement('div');
+            div.id = 'interp-direction-toggle';
+            div.style.cssText = 'margin-bottom: 12px;';
+            interpContent.insertBefore(div, interpContent.firstChild);
+            dirContainer = div;
+        }
+    }
+    if (dirContainer) {
+        dirContainer.innerHTML = `
+            <div class="direction-toggle">
+                <button class="dir-btn active" data-dir="en-ko" onclick="setInterpretDirection('en-ko')">🇺🇸→🇰🇷 영→한</button>
+                <button class="dir-btn" data-dir="ko-en" onclick="setInterpretDirection('ko-en')" ${!hasKorean ? 'disabled title="한국어 원문 없음"' : ''}>🇰🇷→🇺🇸 한→영</button>
+            </div>
+        `;
+    }
     
     updateInterpretStage();
+    showInterpretPhrase();
+}
+
+function setInterpretDirection(dir) {
+    // 한→영인데 한국어 원문 없으면 경고
+    if (dir === 'ko-en' && App.phrases.length > 0 && !App.phrases[0].ko) {
+        showToast('이 기사는 한국어 원문이 없어 한→영 통역을 지원하지 않습니다', 'warning');
+        return;
+    }
+    
+    InterpretApp.direction = dir;
+    
+    // 버튼 활성화 상태 토글
+    const container = document.getElementById('interp-direction-toggle');
+    if (container) {
+        container.querySelectorAll('.dir-btn').forEach(b => b.classList.toggle('active', b.dataset.dir === dir));
+    }
+    
+    // 진행 중이면 리셋
+    if (InterpretApp.phraseIndex > 0 || InterpretApp.stage > 1) {
+        InterpretApp.phraseIndex = 0;
+        InterpretApp.results = [];
+        InterpretApp.stage = 1;
+        updateInterpretStage();
+    }
+    
     showInterpretPhrase();
 }
 
@@ -914,12 +1048,17 @@ function showInterpretPhrase() {
 }
 
 function getStageContent(stage, phrase) {
+    const isEnToKo = InterpretApp.direction === 'en-ko';
+    const listenLabel = isEnToKo ? '영어 원문' : '한국어 원문';
+    const interpLabel = isEnToKo ? '한국어로 통역' : 'Translate to English';
+    const interpPlaceholder = isEnToKo ? '녹음 버튼을 누르거나 직접 입력하세요...' : 'Press record or type your interpretation...';
+    
     switch(stage) {
         case 1: // 듣기
             return `
                 <div class="stage-box">
                     <h3>🎧 1단계: 듣기</h3>
-                    <p class="stage-desc">원문을 듣고 내용을 파악하세요</p>
+                    <p class="stage-desc">${listenLabel}을 듣고 내용을 파악하세요</p>
                     <div class="audio-controls">
                         <button class="btn btn-lg btn-primary" onclick="playInterpretAudio()">
                             🔊 원문 듣기
@@ -950,8 +1089,18 @@ function getStageContent(stage, phrase) {
             return `
                 <div class="stage-box">
                     <h3>🎙️ 3단계: 통역</h3>
-                    <p class="stage-desc">한국어로 통역하세요</p>
-                    <textarea id="interp-input" placeholder="한국어로 통역한 내용을 입력하세요..." style="width:100%;height:120px;padding:12px;border-radius:8px;border:1px solid var(--border-color);font-size:16px;"></textarea>
+                    <p class="stage-desc">${interpLabel}하세요 (녹음 또는 직접 입력)</p>
+                    <div class="interp-record-area">
+                        <button class="btn btn-record" id="btn-record" onclick="toggleInterpretRecord()">
+                            <span class="record-icon">🎙️</span>
+                            <span class="record-label">녹음 시작</span>
+                        </button>
+                        <div class="record-status" id="record-status" style="display:none;">
+                            <span class="record-dot"></span>
+                            <span id="record-status-text">녹음 중...</span>
+                        </div>
+                    </div>
+                    <textarea id="interp-input" placeholder="${interpPlaceholder}" style="width:100%;height:120px;padding:12px;border-radius:8px;border:1px solid var(--border-color);font-size:16px;"></textarea>
                     <div class="stage-actions">
                         <button class="btn btn-secondary" onclick="playInterpretAudio()">🔊 다시 듣기</button>
                         <button class="btn btn-primary" onclick="submitInterpretation()">제출 & 평가 →</button>
@@ -970,15 +1119,90 @@ function getStageContent(stage, phrase) {
     }
 }
 
+// 통역 녹음 (STT)
+let isRecordingInterp = false;
+
+function toggleInterpretRecord() {
+    if (isRecordingInterp) {
+        stopInterpretRecord();
+    } else {
+        startInterpretRecord();
+    }
+}
+
+function startInterpretRecord() {
+    const btn = document.getElementById('btn-record');
+    const status = document.getElementById('record-status');
+    const input = document.getElementById('interp-input');
+    
+    if (!STT.init()) {
+        showToast('이 브라우저에서 마이크를 지원하지 않습니다', 'error');
+        return;
+    }
+    
+    isRecordingInterp = true;
+    btn.classList.add('recording');
+    btn.querySelector('.record-label').textContent = '녹음 중지';
+    status.style.display = 'flex';
+    document.getElementById('record-status-text').textContent = '녹음 중... 말씀하세요';
+    
+    // 기존 텍스트 유지하면서 이어 쓰기
+    const existingText = input.value.trim();
+    
+    // 방향에 따라 STT 언어 변경: 영→한이면 한국어 인식, 한→영이면 영어 인식
+    const sttLang = InterpretApp.direction === 'en-ko' ? 'ko-KR' : 'en-US';
+    
+    STT.start(sttLang, 
+        // onResult
+        (text, isFinal) => {
+            if (isFinal) {
+                input.value = existingText ? existingText + ' ' + text : text;
+                document.getElementById('record-status-text').textContent = '✅ 인식 완료';
+            } else {
+                // 중간 결과 미리보기
+                input.value = existingText ? existingText + ' ' + text : text;
+                document.getElementById('record-status-text').textContent = '🎤 ' + text;
+            }
+        },
+        // onEnd
+        () => {
+            isRecordingInterp = false;
+            btn.classList.remove('recording');
+            btn.querySelector('.record-label').textContent = '녹음 시작';
+            setTimeout(() => { status.style.display = 'none'; }, 1500);
+        }
+    );
+}
+
+function stopInterpretRecord() {
+    STT.stop();
+    isRecordingInterp = false;
+    const btn = document.getElementById('btn-record');
+    if (btn) {
+        btn.classList.remove('recording');
+        btn.querySelector('.record-label').textContent = '녹음 시작';
+    }
+    const status = document.getElementById('record-status');
+    if (status) {
+        document.getElementById('record-status-text').textContent = '녹음 종료';
+        setTimeout(() => { status.style.display = 'none'; }, 1000);
+    }
+}
+
 function playInterpretAudio(rate = 1) {
     if (InterpretApp.currentPhrase) {
-        TTS.speak(InterpretApp.currentPhrase.en, 'en-US', rate);
+        const isEnToKo = InterpretApp.direction === 'en-ko';
+        const text = isEnToKo ? InterpretApp.currentPhrase.en : (InterpretApp.currentPhrase.ko || InterpretApp.currentPhrase.en);
+        const lang = isEnToKo ? 'en-US' : 'ko-KR';
+        TTS.speak(text, lang, rate);
     }
 }
 
 function showInterpretText() {
     if (InterpretApp.currentPhrase) {
-        showToast(InterpretApp.currentPhrase.en, 'info');
+        const isEnToKo = InterpretApp.direction === 'en-ko';
+        const text = isEnToKo ? InterpretApp.currentPhrase.en : (InterpretApp.currentPhrase.ko || InterpretApp.currentPhrase.en);
+        showToast(text, 'info');
     }
 }
 
@@ -1043,28 +1267,54 @@ async function submitInterpretation() {
     `;
     
     console.log('=== 통역 평가 시작 ===');
+    console.log('방향:', InterpretApp.direction);
     console.log('원문:', InterpretApp.currentPhrase?.en);
     console.log('통역:', savedInput);
     
     try {
-        if (!InterpretApp.currentPhrase?.en) {
+        // 방향에 따라 원문 선택
+        const isEnToKo = InterpretApp.direction === 'en-ko';
+        const originalText = isEnToKo 
+            ? InterpretApp.currentPhrase?.en 
+            : (InterpretApp.currentPhrase?.ko || InterpretApp.currentPhrase?.en);
+        
+        if (!originalText) {
             throw new Error('원문이 없습니다');
         }
         
         const fb = await API.getInterpretationFeedback(
-            InterpretApp.currentPhrase.en, 
+            originalText, 
             savedInput, 
-            'en-ko', 
+            InterpretApp.direction, 
             false
         );
         
         console.log('=== 평가 결과 ===', fb);
         
         InterpretApp.results.push({
-            original: InterpretApp.currentPhrase.en,
+            original: originalText,
             interpretation: savedInput,
             score: fb?.score || 0,
-            feedback: fb
+            feedback: fb,
+            direction: InterpretApp.direction
+        });
+        
+        // 문장별 첨삭 기록 저장
+        saveSentenceFeedback({
+            type: 'interpretation',
+            articleId: App.currentArticle?.id,
+            articleTitle: App.currentArticle?.title || '',
+            sentenceIndex: InterpretApp.phraseIndex,
+            original: originalText,
+            userTranslation: savedInput,
+            direction: InterpretApp.direction,
+            score: fb?.score || 0,
+            feedback: fb?.feedback || '',
+            modelAnswer: fb?.modelInterpretation || '',
+            improvements: fb?.missedPoints || [],
+            goodPoints: fb?.goodPoints || [],
+            model: 'Claude Sonnet 4',
+            date: new Date().toISOString()
         });
         
         const feedbackEl = document.getElementById('interp-feedback');
@@ -1087,10 +1337,11 @@ async function submitInterpretation() {
         console.error('=== 통역 평가 오류 ===', e);
         
         InterpretApp.results.push({
-            original: InterpretApp.currentPhrase?.en || '',
+            original: (InterpretApp.direction === 'en-ko' ? InterpretApp.currentPhrase?.en : (InterpretApp.currentPhrase?.ko || InterpretApp.currentPhrase?.en)) || '',
             interpretation: savedInput,
             score: 0,
-            error: e.message
+            error: e.message,
+            direction: InterpretApp.direction
         });
         
         const feedbackEl = document.getElementById('interp-feedback');
@@ -1147,6 +1398,7 @@ function finishInterpretation() {
         completedPhrases: completed, 
         averageScore: avg, 
         results: InterpretApp.results,
+        direction: InterpretApp.direction,
         date: new Date().toISOString()
     };
     
@@ -1178,6 +1430,8 @@ function finishInterpretation() {
     showToast('통역 완료! 평균 ' + avg + '점, +1 티켓');
     navigateTo('dashboard'); 
     updateDashboard();
+    // 자동 동기화
+    if (typeof Sync !== 'undefined') Sync.autoSync();
 }
 
 // ========== 기사 업데이트 ==========
@@ -1212,7 +1466,7 @@ async function updateFromRSS() {
     }
 }
 
-// AI 기사 자동 생성 (GPT로 오늘 날짜 기사 즉시 생성)
+// AI 기사 자동 생성 (Claude Sonnet으로 오늘 날짜 기사 즉시 생성)
 async function generateAIArticle() {
     const formArea = document.getElementById('update-form-area');
     formArea.style.display = 'block';
@@ -1243,7 +1497,7 @@ async function generateAIArticle() {
             <small style="color:var(--text-secondary);">비워두면 오늘 날짜 기반 자동 주제 선정</small>
         </div>
         <button class="btn btn-primary" onclick="doGenerateAIArticle()" style="width:100%;">
-            ✨ AI 기사 생성 (GPT-4o-mini)
+            ✨ AI 기사 생성 (Claude Sonnet 4)
         </button>
     `;
 }
@@ -1351,7 +1605,7 @@ function updateManual() {
         <div style="background: #d4edda; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
             <p style="margin:0; color: #155724;">
                 ✅ <strong>원문 100% 유지</strong> - 복사한 기사가 그대로 저장됩니다.<br>
-                GPT는 번역과 핵심용어 추출만 담당합니다.
+                AI는 번역과 핵심용어 추출만 담당합니다.
             </p>
         </div>
         <div class="form-group">
@@ -1688,6 +1942,84 @@ function saveSettings() {
 
 function saveDday() { const n = document.getElementById('set-dday-name').value; const d = document.getElementById('set-dday-date').value; if (n && d) { Storage.saveDday(n, d); updateDdayDisplay(); showToast('D-Day 설정됨'); } }
 function saveDiary() { Storage.saveDiary(document.getElementById('diary-text').value); showToast('일기 저장됨'); }
+// ========== 캐시 초기화 ==========
+async function clearAllCache() {
+    if (!confirm('캐시를 초기화하면 최신 버전으로 새로고침됩니다.\n학습 데이터는 유지됩니다.\n\n계속하시겠습니까?')) return;
+    
+    try {
+        // 1) Service Worker 캐시 전부 삭제
+        if ('caches' in window) {
+            const names = await caches.keys();
+            await Promise.all(names.map(n => caches.delete(n)));
+            console.log('✅ 캐시 삭제:', names);
+        }
+        
+        // 2) Service Worker 등록 해제 후 재등록
+        if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r => r.unregister()));
+            console.log('✅ SW 해제 완료');
+        }
+        
+        showToast('✅ 캐시 초기화 완료! 새로고침합니다', 'success');
+        setTimeout(() => location.reload(true), 1000);
+    } catch (e) {
+        console.error('캐시 초기화 오류:', e);
+        showToast('캐시 초기화 실패: ' + e.message, 'error');
+    }
+}
+
+// ========== 업데이트 알림 시스템 ==========
+const APP_VERSION = 'v4.3.0';
+const UPDATE_LOG = [
+    {
+        version: 'v4.3.0',
+        date: '2025-02-06',
+        items: [
+            { icon: '🎤', title: 'Whisper 음성인식 도입', desc: 'OpenAI Whisper로 통역 녹음 정확도가 크게 향상되었습니다. 한국어·영어 모두 지원됩니다.' },
+            { icon: '📲', title: '기기 간 동기화', desc: 'PIN 코드로 앱/패드 간 학습 데이터를 동기화할 수 있습니다. 설정 → 기기 간 동기화에서 설정하세요.' },
+            { icon: '💾', title: '문장별 첨삭 기록 저장', desc: '번역·통역 시 문장별 AI 첨삭 결과가 자동으로 저장됩니다.' },
+            { icon: '📰', title: '기사 자동 로드 개선', desc: 'Firebase Storage에서 최신 기사를 바로 불러옵니다.' },
+            { icon: '⏰', title: '기사 3일 만료 시스템', desc: '기사에 남은 시간이 표시되며, 3일 후 자동 삭제됩니다.' },
+            { icon: '🔄', title: '캐시 초기화 버튼', desc: '설정 → 데이터 관리에서 캐시를 수동으로 초기화할 수 있습니다.' }
+        ]
+    }
+];
+
+function checkUpdateNotice() {
+    const lastSeen = localStorage.getItem('dyts_last_update_seen');
+    if (lastSeen === APP_VERSION) return; // 이미 본 버전
+    
+    const body = document.getElementById('update-notice-body');
+    if (!body) return;
+    
+    // 최신 업데이트만 표시 (이전에 못 본 것들도)
+    const updates = lastSeen 
+        ? UPDATE_LOG.filter(u => u.version > lastSeen) 
+        : [UPDATE_LOG[0]];
+    
+    if (updates.length === 0) return;
+    
+    let html = `<div class="update-version">📦 ${APP_VERSION} · ${updates[0].date}</div>`;
+    
+    updates.forEach(u => {
+        u.items.forEach(item => {
+            html += `<div class="update-item">
+                <h4>${item.icon} ${item.title}</h4>
+                <p>${item.desc}</p>
+            </div>`;
+        });
+    });
+    
+    body.innerHTML = html;
+    document.getElementById('update-notice-modal').classList.add('active');
+}
+
+function closeUpdateNotice() {
+    document.getElementById('update-notice-modal').classList.remove('active');
+    localStorage.setItem('dyts_last_update_seen', APP_VERSION);
+}
+
 function exportData() { const d = Storage.exportData(); const b = new Blob([d], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'dayoung_backup.json'; a.click(); showToast('내보내기됨'); }
 function importData() { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = async (e) => { const f = e.target.files[0]; if (f) { const t = await f.text(); if (Storage.importData(t)) { showToast('가져오기됨'); location.reload(); } else showToast('실패', 'error'); } }; i.click(); }
 function resetData() { if (confirm('모든 데이터 삭제?')) { Storage.resetAll(); location.reload(); } }
