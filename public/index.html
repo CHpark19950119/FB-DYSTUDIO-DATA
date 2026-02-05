@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦜 DAYOUNG's 통번역 스튜디오</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="통번역">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' width='100' height='100' rx='20'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='50'>📚</text></svg>">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Playfair+Display:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/games.css">
+    <style>
+        /* 프리미엄 버튼 */
+        .btn-premium {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        .btn-premium:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-1px);
+        }
+        
+        /* 모델 뱃지 */
+        .model-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .model-badge.gpt {
+            background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
+            color: white;
+        }
+        .model-badge.premium {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        /* 피드백 스타일 */
+        .feedback-main {
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+        
+        /* 분석 섹션 */
+        .analysis-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .analysis-item {
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .analysis-item:last-child { margin-bottom: 0; }
+        .analysis-item strong { color: var(--accent-primary); }
+        
+        /* 모범 번역 */
+        .model-answer {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 1px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        
+        /* 버튼 그룹 */
+        .trans-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .trans-actions .btn { flex: 1; min-width: 100px; }
+        
+        /* 한영 지원 표시 */
+        .article-card .article-meta span[title] {
+            cursor: help;
+        }
+        
+        /* 실제/AI 뱃지 */
+        .badge-real {
+            background: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-ai {
+            background: #6c757d;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        /* 기사 카드 개선 */
+        .article-card {
+            cursor: default;
+        }
+        .article-summary {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        .article-date {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        .article-progress {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            height: 20px;
+            position: relative;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        .article-progress-fill {
+            background: var(--accent-primary);
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .article-progress span {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .article-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn-accent {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+        }
+        
+        /* 기사 상세 모달 */
+        .modal-xl {
+            max-width: 900px;
+            width: 95%;
+        }
+        .article-detail-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .article-detail-section {
+            margin-bottom: 24px;
+        }
+        .article-detail-section h4 {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .article-content {
+            line-height: 1.8;
+            font-size: 15px;
+        }
+        .article-content p {
+            margin-bottom: 8px;
+            display: flex;
+            gap: 8px;
+        }
+        .sentence-num {
+            background: var(--accent-primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        /* 통역 연습 */
+        .interp-progress {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .interp-progress .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .interp-progress .progress-fill {
+            height: 100%;
+            background: var(--accent-primary);
+        }
+        .stage-box {
+            text-align: center;
+            padding: 24px;
+        }
+        .stage-box h3 {
+            margin-bottom: 8px;
+        }
+        .stage-desc {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        .audio-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .stage-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .timer-display {
+            font-size: 72px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin: 24px 0;
+        }
+        
+        /* 기사 진행도 */
+        .article-progress-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin: 12px 0;
+            border: 1px solid var(--border-color);
+        }
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .progress-row:last-child { margin-bottom: 0; }
+        .progress-label {
+            font-size: 12px;
+            width: 60px;
+            flex-shrink: 0;
+            font-weight: 500;
+        }
+        .progress-bar-mini {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .progress-fill-mini {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+            border-radius: 3px;
+        }
+        .progress-fill-mini.interp {
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+        }
+        .progress-fill-mini.empty {
+            background: transparent;
+        }
+        .progress-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            min-width: 85px;
+            text-align: right;
+            font-weight: 500;
+        }
+        .progress-text.score-high { color: #28a745; }
+        .progress-text.score-mid { color: #fd7e14; }
+        .progress-text.score-low { color: #dc3545; }
+        
+        /* 기사 정보 */
+        .article-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-top: 1px solid var(--border-color);
+        }
+        .article-date-time {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+        .date-icon { font-size: 14px; }
+        .date-full { color: var(--text-primary); }
+        .date-relative { color: var(--text-secondary); font-size: 12px; }
+        .article-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* 아카이브 카드 */
+        .archive-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+        }
+        .archive-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .archive-header {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .archive-type {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .archive-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .archive-score {
+            font-size: 13px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+        .archive-title {
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+        .archive-progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .archive-progress-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .archive-progress-fill {
+            height: 100%;
+            background: var(--accent-primary);
+        }
+        
+        /* 점수 색상 */
+        .score-high { background: #d4edda; color: #155724; }
+        .score-mid { background: #fff3cd; color: #856404; }
+        .score-low { background: #f8d7da; color: #721c24; }
+        
+        /* 아카이브 상세 */
+        .archive-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+        .summary-item {
+            text-align: center;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 4px;
+        }
+        .summary-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .section-title {
+            font-size: 16px;
+            margin: 20px 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .feedback-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .feedback-item {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .feedback-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .feedback-num {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .feedback-score {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .feedback-model {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+        .feedback-original, .feedback-user, .feedback-ai, 
+        .feedback-model-answer, .feedback-improvements,
+        .feedback-missed, .feedback-good {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .feedback-original strong, .feedback-user strong {
+            color: var(--text-secondary);
+        }
+        .feedback-ai { color: var(--accent-primary); }
+        .feedback-model-answer {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-primary);
+        }
+        .feedback-improvements ul, .feedback-missed ul, .feedback-good ul {
+            margin: 4px 0 0 16px;
+            padding: 0;
+        }
+        .feedback-missed { color: #dc3545; }
+        .feedback-good { color: #28a745; }
+        
+        /* ===== 문장별 대조 보기 ===== */
+        .inline-sentence { margin-bottom:10px; padding:12px; background:var(--bg-secondary); border-radius:8px; border-left:3px solid var(--accent-primary); cursor:pointer; transition:all 0.2s; }
+        .inline-sentence:hover { background:var(--bg-tertiary); transform:translateX(3px); }
+        .inline-sentence .en-text { font-size:15px; line-height:1.8; display:flex; gap:8px; align-items:flex-start; }
+        .inline-sentence .ko-text { display:none; margin-top:8px; padding:10px 12px; background:linear-gradient(135deg,rgba(102,126,234,0.08),rgba(118,75,162,0.08)); border-radius:6px; font-size:14px; line-height:1.7; color:var(--accent-primary); border-left:3px solid var(--accent-primary); }
+        .inline-sentence .ko-text.visible { display:block; animation:slideDown 0.2s ease; }
+        .inline-sentence .tts-btn-mini { background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; opacity:0.6; flex-shrink:0; }
+        .inline-sentence .tts-btn-mini:hover { opacity:1; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+        
+        /* ===== 통번역 AI 리서치 ===== */
+        .counsel-msg { display:flex; gap:12px; max-width:88%; animation: msgIn 0.3s ease; }
+        .counsel-msg.counsel-ai { align-self:flex-start; }
+        .counsel-msg.counsel-user { align-self:flex-end; flex-direction:row-reverse; }
+        .counsel-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; background:var(--bg-tertiary); }
+        .counsel-bubble { padding:14px 18px; border-radius:16px; font-size:14px; line-height:1.8; }
+        .counsel-bubble ul { margin:4px 0; padding-left:18px; }
+        .counsel-bubble li { margin-bottom:2px; }
+        .counsel-ai .counsel-bubble { background:var(--bg-secondary); border:1px solid var(--border-color); border-top-left-radius:4px; }
+        .counsel-user .counsel-bubble { background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-top-right-radius:4px; }
+        .counsel-typing { display:flex; gap:4px; padding:8px 0; }
+        .counsel-typing span { width:8px; height:8px; border-radius:50%; background:var(--text-secondary); animation:typingBounce 1.4s infinite; }
+        .counsel-typing span:nth-child(2) { animation-delay:0.2s; }
+        .counsel-typing span:nth-child(3) { animation-delay:0.4s; }
+        @keyframes typingBounce { 0%,60%,100% { transform:translateY(0); } 30% { transform:translateY(-8px); } }
+        @keyframes msgIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .counseling-type-btn.active { background:linear-gradient(135deg,#667eea,#764ba2) !important; color:white !important; border-color:transparent !important; }
+        .quick-prompts .btn { transition:all 0.2s; border:1px dashed var(--border-color) !important; }
+        .quick-prompts .btn:hover { border-style:solid !important; background:var(--accent-light) !important; color:var(--accent-primary) !important; }
+
+        /* ===== 통번역 도구 추천 ===== */
+        .tool-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+        .tool-item { background:var(--bg-tertiary); border-radius:12px; padding:20px; border:1px solid var(--border-color); transition:all 0.25s; }
+        .tool-item:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); border-color:var(--accent-primary); }
+        .tool-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+        .tool-header strong { font-size:16px; }
+        .tool-badge { font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600; }
+        .tool-pro { background:#4f46e5; color:white; }
+        .tool-rec { background:#10b981; color:white; }
+        .tool-free { background:#f59e0b; color:white; }
+        .tool-item p { font-size:13px; line-height:1.7; color:var(--text-secondary); margin-bottom:10px; }
+        .tool-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
+        .tool-tags span { font-size:11px; padding:2px 8px; background:var(--bg-secondary); border-radius:8px; color:var(--text-secondary); border:1px solid var(--border-light); }
+        .tool-price { font-size:12px; color:var(--text-tertiary); }
+        .tool-category-card { border-left:4px solid var(--accent-primary); }
+
+        /* ===== 집중 몰입 디자인 ===== */
+        .dash-card { transition:all 0.3s ease; }
+        .dash-card:hover { box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+        * { scroll-behavior:smooth; }
+        .btn-primary:hover { box-shadow:0 4px 15px rgba(99,102,241,0.35); }
+        textarea:focus, input:focus, select:focus { outline:none; border-color:var(--accent-primary) !important; box-shadow:0 0 0 3px rgba(99,102,241,0.15); transition:all 0.2s ease; }
+        .article-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+        .nav-item { transition:all 0.2s ease; }
+        .nav-item:hover { transform:translateX(4px); }
+        
+        /* OCR */
+        #ocr-upload-area.dragover { border-color:var(--accent-primary); background:rgba(102,126,234,0.05); }
+        .ocr-sentence-card { background:var(--bg-secondary); border-radius:8px; padding:14px; border-left:3px solid var(--accent-primary); }
+        .ocr-sentence-card .original { font-size:15px; line-height:1.7; margin-bottom:8px; }
+        .ocr-sentence-card .translated { font-size:14px; line-height:1.6; color:var(--accent-primary); padding:8px 12px; background:rgba(102,126,234,0.08); border-radius:6px; }
+        .ocr-sentence-card .terms { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+        .ocr-sentence-card .terms span { font-size:11px; padding:2px 8px; background:var(--bg-tertiary); border-radius:10px; color:var(--text-secondary); }
+        
+        /* PWA 설치 버튼 */
+        .pwa-install-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            z-index: 1000;
+            display: none;
+            animation: pulse 2s infinite;
+        }
+        .pwa-install-btn:hover {
+            transform: scale(1.05);
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 4px 25px rgba(102, 126, 234, 0.6); }
+        }
+        
+        @media (max-width: 768px) {
+            .pwa-install-btn {
+                bottom: 100px;
+                right: 15px;
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+            
+            /* 모바일 네비게이션 개선 */
+            .mobile-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--bg-primary);
+                border-top: 1px solid var(--border-color);
+                display: flex;
+                justify-content: space-around;
+                padding: 8px 4px;
+                z-index: 1000;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            }
+            .mobile-nav .mnav {
+                flex: 1;
+                background: none;
+                border: none;
+                font-size: 20px;
+                padding: 8px 4px;
+                cursor: pointer;
+                border-radius: 8px;
+                transition: all 0.2s;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+            }
+            .mobile-nav .mnav::after {
+                content: attr(title);
+                font-size: 9px;
+                color: var(--text-secondary);
+            }
+            .mobile-nav .mnav.active {
+                background: var(--accent-primary);
+                color: white;
+            }
+            .mobile-nav .mnav.active::after {
+                color: white;
+            }
+            .mobile-nav .mnav:hover {
+                background: var(--bg-tertiary);
+            }
+            
+            /* 메인 컨텐츠 하단 여백 */
+            .main-content {
+                padding-bottom: 80px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 배경 효과 -->
+    <div class="bg-effects">
+        <div class="bg-gradient"></div>
+        <div class="bg-particles" id="particles"></div>
+        <div class="bg-pattern"></div>
+    </div>
+
+    <!-- BGM 플레이어 -->
+    <div class="bgm-player" id="bgm-player">
+        <button class="bgm-toggle" onclick="toggleBGM()" title="배경음악">
+            <span id="bgm-icon">🔇</span>
+        </button>
+        <div class="bgm-controls" id="bgm-controls">
+            <select id="bgm-select" onchange="changeBGM()">
+                <option value="">음악 선택</option>
+                <option value="lofi">🎵 Lo-Fi Beats</option>
+                <option value="jazz">🎷 Smooth Jazz</option>
+                <option value="nature">🌿 자연 소리</option>
+                <option value="rain">🌧️ 빗소리</option>
+                <option value="piano">🎹 Piano</option>
+            </select>
+            <input type="range" id="bgm-volume" min="0" max="100" value="30" onchange="setBGMVolume()">
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- 사이드바 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="mascot-container">
+                        <span class="mascot" id="sidebar-mascot">🦜</span>
+                        <span class="mascot-level" id="mascot-level">Lv.1</span>
+                    </div>
+                    <div class="logo-text">
+                        <h1 id="studio-name">DAYOUNG's Studio</h1>
+                        <p class="studio-title" id="studio-title">번역 새싹</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="user-stats-mini">
+                <div class="exp-bar-mini">
+                    <div class="exp-fill" id="exp-bar-fill" style="width: 0%"></div>
+                </div>
+                <span class="exp-text" id="exp-text">0 / 100 EXP</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="dashboard"><span>🏠</span>대시보드</button>
+                <button class="nav-item" data-view="articles"><span>📰</span>기사 학습<em id="article-count">0</em></button>
+                <button class="nav-item" data-view="translate"><span>✍️</span>번역 연습</button>
+                <button class="nav-item" data-view="interpret"><span>🎙️</span>통역 연습</button>
+                <button class="nav-item" data-view="vocabulary"><span>📚</span>단어장</button>
+                <button class="nav-item" data-view="games"><span>🎮</span>미니게임</button>
+                <button class="nav-item" data-view="archive"><span>🗂️</span>아카이브</button>
+                <button class="nav-item" data-view="ocr"><span>📸</span>캡쳐 번역</button>
+                <button class="nav-item" data-view="counseling"><span>💭</span>AI 멘토</button>
+                <button class="nav-item" data-view="tools"><span>🛠️</span>번역 도구</button>
+                <button class="nav-item" data-view="achievements"><span>🏆</span>업적</button>
+                <button class="nav-item" data-view="customize"><span>🎨</span>꾸미기</button>
+                <button class="nav-item" data-view="settings"><span>⚙️</span>설정</button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="streak-box">
+                    <span class="streak-fire">🔥</span>
+                    <div class="streak-info">
+                        <b id="streak-count">0</b>일 연속!
+                        <small id="streak-best">최고: 0일</small>
+                    </div>
+                </div>
+                <button class="fortune-btn" onclick="showFortune()">🔮 오늘의 운세</button>
+            </div>
+        </aside>
+
+        <!-- 모바일 네비게이션 -->
+        <nav class="mobile-nav">
+            <button class="mnav active" data-view="dashboard" title="홈">🏠</button>
+            <button class="mnav" data-view="articles" title="기사">📰</button>
+            <button class="mnav" data-view="translate" title="번역">✍️</button>
+            <button class="mnav" data-view="interpret" title="통역">🎙️</button>
+            <button class="mnav" data-view="vocabulary" title="단어장">📚</button>
+            <button class="mnav" data-view="ocr" title="캡쳐번역">📸</button>
+            <button class="mnav" data-view="counseling" title="AI멘토">💭</button>
+            <button class="mnav" data-view="tools" title="번역도구">🛠️</button>
+            <button class="mnav" data-view="archive" title="아카이브">📁</button>
+            <button class="mnav" data-view="customize" title="꾸미기">🎨</button>
+            <button class="mnav" data-view="settings" title="설정">⚙️</button>
+        </nav>
+
+        <main class="main-content">
+            <!-- ========== 대시보드 ========== -->
+            <section class="view active" id="view-dashboard">
+                <header class="view-header">
+                    <h2>🦜 <span id="header-name">DAYOUNG</span>'s 통번역 스튜디오</h2>
+                    <p id="today-date"></p>
+                </header>
+
+                <!-- 오늘의 운세 배너 -->
+                <div class="fortune-banner" id="fortune-banner" style="display:none;">
+                    <span class="fortune-icon">🔮</span>
+                    <p id="fortune-text"></p>
+                    <button onclick="closeFortune()">×</button>
+                </div>
+
+                <div class="dash-hero">
+                    <div class="hero-left">
+                        <div class="hero-progress">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="52"/>
+                                <circle class="ring-fill" id="hero-ring" cx="60" cy="60" r="52"/>
+                            </svg>
+                            <div class="hero-text">
+                                <span id="hero-pct">0%</span>
+                                <small>오늘 목표</small>
+                            </div>
+                        </div>
+                        <div class="hero-checks">
+                            <div id="hc-article"><span>📰</span>기사<i>○</i></div>
+                            <div id="hc-translate"><span>✍️</span>번역<i>○</i></div>
+                            <div id="hc-vocab"><span>📚</span>단어<i>○</i></div>
+                            <div id="hc-quiz"><span>🎯</span>퀴즈<i>○</i></div>
+                        </div>
+                    </div>
+
+                    <div class="hero-mascot-area">
+                        <div class="mascot-display">
+                            <div class="mascot-big" id="mascot-big">🦜</div>
+                            <div class="mascot-name" id="mascot-name-display">파랑이</div>
+                            <div class="mascot-mood" id="mascot-mood">기분 좋음 😊</div>
+                        </div>
+                        <div class="mascot-speech">
+                            <p id="mascot-msg">오늘도 화이팅! 💪</p>
+                        </div>
+                    </div>
+
+                    <div class="hero-right">
+                        <div class="level-card">
+                            <div class="level-badge">
+                                <span class="level-num" id="user-level">1</span>
+                                <span class="level-label">LEVEL</span>
+                            </div>
+                            <div class="level-info">
+                                <div class="title-badge" id="user-title">번역 새싹</div>
+                                <div class="exp-bar">
+                                    <div class="exp-fill" id="exp-fill" style="width:0%"></div>
+                                </div>
+                                <small id="exp-display">0 / 100 EXP</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 학습 잔디 -->
+                <div class="dash-card grass-card">
+                    <div class="card-header">
+                        <h3>🌱 학습 잔디</h3>
+                        <span class="grass-year" id="grass-year">2026</span>
+                    </div>
+                    <div class="grass-container" id="grass-container"></div>
+                    <div class="grass-legend">
+                        <span>Less</span>
+                        <div class="grass-levels">
+                            <div class="grass-level" data-level="0"></div>
+                            <div class="grass-level" data-level="1"></div>
+                            <div class="grass-level" data-level="2"></div>
+                            <div class="grass-level" data-level="3"></div>
+                            <div class="grass-level" data-level="4"></div>
+                        </div>
+                        <span>More</span>
+                    </div>
+                </div>
+
+                <div class="dash-grid">
+                    <!-- 오늘의 추천 -->
+                    <div class="dash-card recommend-card">
+                        <h3>📰 오늘의 추천</h3>
+                        <div class="rec-meta">
+                            <span id="rec-cat">-</span>
+                            <span id="rec-level">-</span>
+                            <span id="rec-new" class="badge-new"></span>
+                        </div>
+                        <h4 id="rec-title">로딩중...</h4>
+                        <div class="rec-info">
+                            <span id="rec-source"></span>
+                            <span id="rec-date"></span>
+                        </div>
+                        <button class="btn btn-primary btn-block" onclick="startRecommended()">
+                            학습 시작 →
+                        </button>
+                    </div>
+
+                    <!-- 학습 시간 -->
+                    <div class="dash-card time-card">
+                        <h3>⏱️ 오늘 학습</h3>
+                        <div class="time-display">
+                            <span class="time-big" id="dash-time">0</span>
+                            <span class="time-unit">분</span>
+                        </div>
+                        <div class="time-goal">
+                            목표: <span id="time-goal">60</span>분
+                        </div>
+                    </div>
+
+                    <!-- 단어장 -->
+                    <div class="dash-card vocab-card">
+                        <h3>📚 단어장</h3>
+                        <div class="vocab-summary">
+                            <div><b id="dv-total">0</b><small>전체</small></div>
+                            <div><b id="dv-mastered">0</b><small>암기</small></div>
+                            <div class="hl"><b id="dv-review">0</b><small>복습</small></div>
+                        </div>
+                        <button class="btn btn-secondary btn-block" onclick="navigateTo('games')">
+                            🎮 게임으로 복습
+                        </button>
+                    </div>
+
+                    <!-- 최근 기사 -->
+                    <div class="dash-card new-card">
+                        <div class="card-header">
+                            <h3>🆕 최근 기사</h3>
+                            <button class="btn-icon" onclick="refreshArticles()" title="새로고침">🔄</button>
+                        </div>
+                        <div id="new-articles-list" class="new-articles-list">
+                            <p class="empty-small">로딩중...</p>
+                        </div>
+                    </div>
+
+                    <!-- 최근 뱃지 -->
+                    <div class="dash-card badges-card">
+                        <h3>🏆 최근 획득 뱃지</h3>
+                        <div id="recent-badges" class="recent-badges">
+                            <p class="empty-small">아직 뱃지가 없습니다</p>
+                        </div>
+                        <button class="btn btn-ghost btn-block" onclick="navigateTo('achievements')">
+                            전체 보기 →
+                        </button>
+                    </div>
+
+                    <!-- D-Day -->
+                    <div class="dash-card dday-card">
+                        <h3>📅 D-Day</h3>
+                        <div class="dday-display" id="dday-display">
+                            <p class="empty-small">목표를 설정하세요</p>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" onclick="openDdayModal()">+ 목표 추가</button>
+                    </div>
+                </div>
+
+                <!-- 일기/메모 -->
+                <div class="dash-card diary-card">
+                    <div class="card-header">
+                        <h3>📝 오늘의 학습 일기</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="saveDiary()">저장</button>
+                    </div>
+                    <textarea id="diary-text" placeholder="오늘 학습하면서 느낀 점, 어려웠던 부분, 기억하고 싶은 표현 등을 자유롭게 적어보세요..."></textarea>
+                </div>
+            </section>
+
+            <!-- ========== 기사 목록 ========== -->
+            <section class="view" id="view-articles">
+                <header class="view-header">
+                    <h2>📰 기사 학습</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openArticleUpdateModal()">
+                            🔄 새 기사 가져오기
+                        </button>
+                    </div>
+                </header>
+                <div class="filters-bar">
+                    <select id="filter-cat">
+                        <option value="all">전체 분야</option>
+                        <option value="economy">💹 경제/금융</option>
+                        <option value="politics">🌍 국제정치</option>
+                        <option value="law">⚖️ 법률</option>
+                        <option value="health">🏥 의료</option>
+                        <option value="tech">💻 기술</option>
+                    </select>
+                    <select id="filter-level">
+                        <option value="all">전체 레벨</option>
+                        <option value="beginner">🌱 초급</option>
+                        <option value="intermediate">📚 중급</option>
+                        <option value="advanced">🎓 고급</option>
+                        <option value="expert">👑 심화</option>
+                    </select>
+                    <select id="filter-direction">
+                        <option value="en-ko">🇺🇸→🇰🇷 영한</option>
+                        <option value="ko-en">🇰🇷→🇺🇸 한영</option>
+                    </select>
+                    <select id="filter-sort">
+                        <option value="newest">🆕 최신순</option>
+                        <option value="oldest">📅 오래된순</option>
+                        <option value="difficulty">📊 난이도순</option>
+                    </select>
+                </div>
+                <div id="articles-grid" class="articles-grid"></div>
+            </section>
+
+            <!-- ========== 번역 연습 ========== -->
+            <section class="view" id="view-translate">
+                <header class="view-header">
+                    <h2>✍️ 번역 연습</h2>
+                    <div class="header-actions">
+                        <div class="direction-toggle">
+                            <button class="dir-btn active" data-dir="en-ko" onclick="setTranslateDirection('en-ko')">
+                                🇺🇸→🇰🇷 영한
+                            </button>
+                            <button class="dir-btn" data-dir="ko-en" onclick="setTranslateDirection('ko-en')">
+                                🇰🇷→🇺🇸 한영
+                            </button>
+                        </div>
+                        <button class="btn btn-secondary" onclick="navigateTo('articles')">📰 기사 변경</button>
+                        <button class="btn btn-icon" onclick="stopTTS()">🔇</button>
+                    </div>
+                </header>
+
+                <div id="trans-empty" class="empty-box">
+                    <div class="empty-icon">📰</div>
+                    <p>먼저 기사를 선택해주세요</p>
+                    <button class="btn btn-primary" onclick="navigateTo('articles')">기사 선택하기</button>
+                </div>
+
+                <div id="trans-content" style="display:none;">
+                    <div class="trans-article-info">
+                        <span class="trans-cat" id="trans-cat"></span>
+                        <span class="trans-level" id="trans-level"></span>
+                        <h3 id="trans-title"></h3>
+                    </div>
+
+                    <div class="trans-progress-bar">
+                        <div class="trans-progress-fill" id="trans-progress-fill"></div>
+                        <span class="trans-progress-text" id="trans-progress-text">0 / 0</span>
+                    </div>
+
+                    <div class="trans-workspace">
+                        <div class="phrase-card">
+                            <div class="phrase-header">
+                                <span class="phrase-num" id="phrase-num">1</span>
+                                <button class="btn-icon" onclick="speakPhrase()">🔊</button>
+                            </div>
+                            <p class="phrase-text" id="phrase-text"></p>
+                        </div>
+
+                        <div class="trans-input-area">
+                            <textarea id="trans-input" placeholder="번역을 입력하세요..."></textarea>
+                            <div class="trans-actions">
+                                <button class="btn btn-ghost" onclick="skipPhrase()">건너뛰기</button>
+                                <button class="btn btn-primary" onclick="submitWithGPT()">
+                                    🚀 GPT 첨삭
+                                </button>
+                                <button class="btn btn-premium" onclick="submitWithClaude()">
+                                    ✨ Claude 프리미엄
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="feedback-area" id="feedback-area" style="display:none;">
+                            <div class="feedback-score">
+                                <span class="score-num" id="feedback-score">0</span>
+                                <span class="score-label">점</span>
+                            </div>
+                            <div class="feedback-content" id="feedback-content"></div>
+                            <button class="btn btn-primary" onclick="nextPhrase()">다음 문장 →</button>
+                        </div>
+                    </div>
+
+                    <div class="key-terms-panel">
+                        <h4>📖 핵심 용어</h4>
+                        <div id="key-terms-list" class="key-terms-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== 통역 연습 ========== -->
+            <section class="view" id="view-interpret">
+                <header class="view-header">
+                    <h2>🎙️ 통역 연습</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="navigateTo('articles')">📰 기사 변경</button>
+                    </div>
+                </header>
+
+                <div id="interp-empty" class="empty-box">
+                    <div class="empty-icon">🎙️</div>
+                    <p>기사를 선택하고 통역 연습을 시작하세요</p>
+                    <button class="btn btn-primary" onclick="navigateTo('articles')">기사 선택하기</button>
+                </div>
+
+                <div id="interp-content" style="display:none;">
+                    <div class="interp-stages">
+                        <div class="stage active" data-stage="1">
+                            <span class="stage-num">1</span>
+                            <span class="stage-name">듣기</span>
+                        </div>
+                        <div class="stage" data-stage="2">
+                            <span class="stage-num">2</span>
+                            <span class="stage-name">기억</span>
+                        </div>
+                        <div class="stage" data-stage="3">
+                            <span class="stage-num">3</span>
+                            <span class="stage-name">녹음</span>
+                        </div>
+                        <div class="stage" data-stage="4">
+                            <span class="stage-num">4</span>
+                            <span class="stage-name">평가</span>
+                        </div>
+                    </div>
+
+                    <div class="interp-workspace" id="interp-workspace">
+                        <!-- 동적 콘텐츠 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== 단어장 ========== -->
+            <section class="view" id="view-vocabulary">
+                <header class="view-header">
+                    <h2>📚 단어장</h2>
+                    <button class="btn btn-primary" onclick="openWordModal()">+ 단어 추가</button>
+                </header>
+
+                <div class="vocab-tabs">
+                    <button class="tab-btn active" data-tab="today">오늘 추가</button>
+                    <button class="tab-btn" data-tab="all">전체</button>
+                    <button class="tab-btn" data-tab="starred">⭐ 중요</button>
+                    <button class="tab-btn" data-tab="review">🔄 복습</button>
+                </div>
+
+                <div id="vocab-list" class="vocab-list"></div>
+            </section>
+
+            <!-- ========== 미니게임 ========== -->
+            <section class="view" id="view-games">
+                <header class="view-header">
+                    <h2>🎮 미니게임</h2>
+                </header>
+
+                <div class="games-grid">
+                    <!-- 단어 퀴즈 -->
+                    <div class="game-card" onclick="startGame('quiz')">
+                        <div class="game-icon">🎯</div>
+                        <h3>단어 퀴즈</h3>
+                        <p>4지선다로 단어 실력 테스트</p>
+                        <div class="game-best">최고: <span id="quiz-best">0</span>점</div>
+                    </div>
+
+                    <!-- 타자 게임 -->
+                    <div class="game-card" onclick="startGame('typing')">
+                        <div class="game-icon">⌨️</div>
+                        <h3>타자 게임</h3>
+                        <p>떨어지는 단어를 빠르게 입력!</p>
+                        <div class="game-best">최고: <span id="typing-best">0</span>점</div>
+                    </div>
+
+                    <!-- 매칭 게임 -->
+                    <div class="game-card" onclick="startGame('matching')">
+                        <div class="game-icon">🃏</div>
+                        <h3>매칭 게임</h3>
+                        <p>영어-한국어 짝 맞추기</p>
+                        <div class="game-best">최고: <span id="matching-best">0</span>초</div>
+                    </div>
+
+                    <!-- 스피드 퀴즈 -->
+                    <div class="game-card" onclick="startGame('speed')">
+                        <div class="game-icon">⚡</div>
+                        <h3>스피드 퀴즈</h3>
+                        <p>30초 안에 최대한 많이!</p>
+                        <div class="game-best">최고: <span id="speed-best">0</span>개</div>
+                    </div>
+
+                    <!-- 가챠 -->
+                    <div class="game-card gacha-card" onclick="openGacha()">
+                        <div class="game-icon">🎁</div>
+                        <h3>오늘의 가챠</h3>
+                        <p>학습 완료 보상 뽑기!</p>
+                        <div class="gacha-tickets">티켓: <span id="gacha-tickets">0</span>장</div>
+                    </div>
+                </div>
+
+                <!-- 게임 플레이 영역 -->
+                <div id="game-play-area" class="game-play-area" style="display:none;"></div>
+            </section>
+
+            <!-- ========== 캡쳐 번역 (OCR) ========== -->
+            <section class="view" id="view-ocr">
+                <header class="view-header">
+                    <h2>📸 캡쳐 번역</h2>
+                    <p style="font-size:13px;color:var(--text-secondary);">문서를 캡쳐/촬영하여 번역 학습 자료로 변환</p>
+                </header>
+
+                <div class="dash-card" style="margin-bottom:20px;">
+                    <h3 style="margin-bottom:12px;">📷 이미지 업로드</h3>
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">캡쳐한 문서, 교재, 뉴스 등의 이미지를 업로드하면 AI가 텍스트를 추출하고 번역 학습용으로 변환합니다.</p>
+                    
+                    <div id="ocr-upload-area" style="border:2px dashed var(--border-color);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;" onclick="document.getElementById('ocr-file-input').click()">
+                        <div style="font-size:48px;margin-bottom:12px;">📄</div>
+                        <p style="font-weight:600;margin-bottom:4px;">이미지를 드래그하거나 클릭하여 업로드</p>
+                        <small style="color:var(--text-secondary);">PNG, JPG, WEBP 지원 · 최대 10MB</small>
+                        <input type="file" id="ocr-file-input" accept="image/*" style="display:none;" onchange="handleOCRUpload(event)">
+                    </div>
+                    
+                    <!-- 이미지 미리보기 -->
+                    <div id="ocr-preview" style="display:none;margin-top:16px;">
+                        <img id="ocr-preview-img" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid var(--border-color);">
+                        <div style="display:flex;gap:8px;margin-top:12px;">
+                            <button class="btn btn-primary" onclick="processOCR()" id="ocr-process-btn">🔍 AI 텍스트 추출 & 번역</button>
+                            <button class="btn btn-secondary" onclick="clearOCR()">🗑️ 초기화</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OCR 결과 -->
+                <div id="ocr-result" style="display:none;">
+                    <div class="dash-card" style="margin-bottom:16px;">
+                        <h3 style="margin-bottom:12px;">📝 추출된 원문</h3>
+                        <div id="ocr-original-text" style="background:var(--bg-tertiary);padding:16px;border-radius:8px;line-height:1.8;font-size:15px;white-space:pre-wrap;"></div>
+                        <div style="display:flex;gap:8px;margin-top:12px;">
+                            <span id="ocr-language" class="model-badge premium"></span>
+                            <span id="ocr-difficulty" class="model-badge gpt"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="dash-card" style="margin-bottom:16px;">
+                        <h3 style="margin-bottom:12px;">🔀 문장별 번역</h3>
+                        <div id="ocr-sentences" style="display:flex;flex-direction:column;gap:12px;"></div>
+                    </div>
+                    
+                    <div class="dash-card" style="margin-bottom:16px;">
+                        <h3 style="margin-bottom:12px;">📋 요약</h3>
+                        <p id="ocr-summary" style="line-height:1.7;"></p>
+                    </div>
+                    
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn btn-primary" onclick="addOCRToArticles()">📰 기사로 추가</button>
+                        <button class="btn btn-secondary" onclick="copyOCRText()">📋 텍스트 복사</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== 통번역 AI 리서치 ========== -->
+            <section class="view" id="view-counseling">
+                <header class="view-header">
+                    <h2>💭 AI 멘토</h2>
+                    <p style="font-size:13px;color:var(--text-secondary);">통번역 공부, 대학원 생활, 뭐든 편하게 물어봐 🌱</p>
+                </header>
+
+                <!-- 모드 선택 -->
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;" id="counseling-type-selector">
+                    <button class="btn btn-sm counseling-type-btn active" data-type="general" onclick="setCounselingType('general')">🌱 통번역 멘토링</button>
+                    <button class="btn btn-sm btn-secondary counseling-type-btn" data-type="career" onclick="setCounselingType('career')">📖 이론/공부 도움</button>
+                    <button class="btn btn-sm btn-secondary counseling-type-btn" data-type="stress" onclick="setCounselingType('stress')">💪 멘탈 관리</button>
+                    <button class="btn btn-sm btn-secondary counseling-type-btn" data-type="relationship" onclick="setCounselingType('relationship')">🗺️ 진로 상담</button>
+                </div>
+
+                <!-- 빠른 질문 -->
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" class="quick-prompts">
+                    <button class="btn btn-sm btn-secondary" onclick="quickResearch('번역 과제가 너무 어려워서 자신감이 없어... 어떻게 하면 좋을까?')" style="font-size:12px;">😰 과제가 너무 어려워</button>
+                    <button class="btn btn-sm btn-secondary" onclick="quickResearch('동시통역 연습을 시작하고 싶은데 혼자서 어떻게 준비하면 좋을지 알려줘')" style="font-size:12px;">🎙️ 통역 연습법</button>
+                    <button class="btn btn-sm btn-secondary" onclick="quickResearch('번역 속도가 너무 느린데, 실무에서 어느 정도 속도가 필요한 거야?')" style="font-size:12px;">⏰ 번역 속도 고민</button>
+                    <button class="btn btn-sm btn-secondary" onclick="quickResearch('대학원 다니면서 번역 아르바이트 경험을 쌓고 싶은데, 어디서 시작해?')" style="font-size:12px;">💼 실무 경험 쌓기</button>
+                </div>
+
+                <!-- 채팅 영역 -->
+                <div class="dash-card" style="padding:0;overflow:hidden;">
+                    <div id="counseling-messages" style="height:500px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;">
+                        <div class="counsel-msg counsel-ai">
+                            <div class="counsel-avatar">🌱</div>
+                            <div class="counsel-bubble">
+                                <p>안녕! 나는 대영이의 <strong>AI 멘토</strong>야 😊</p>
+                                <p style="margin-top:8px;">통번역 공부하면서 어려운 거, 막히는 거, 불안한 거... 뭐든 편하게 물어봐. 바보 같은 질문 같은 건 없어!</p>
+                                <p style="margin-top:8px;font-size:13px;color:var(--text-secondary);">💡 이런 거 물어볼 수 있어: 번역 이론, 통역 연습법, 대학원 팁, 진로 고민, 멘탈 관리...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="border-top:1px solid var(--border-color);padding:16px;display:flex;gap:8px;align-items:flex-end;">
+                        <textarea id="counseling-input" placeholder="뭐든 편하게 물어봐! 😊" style="flex:1;resize:none;height:60px;padding:12px;border-radius:12px;border:1px solid var(--border-color);font-size:14px;line-height:1.5;font-family:inherit;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCounselingMessage()}"></textarea>
+                        <button class="btn btn-primary" onclick="sendCounselingMessage()" style="height:60px;padding:0 20px;border-radius:12px;">
+                            보내기 ✨
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-secondary" onclick="clearCounseling()">🔄 새 대화</button>
+                    <button class="btn btn-sm btn-secondary" onclick="saveCounselingLog()">💾 대화 저장</button>
+                    <span style="margin-left:auto;font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;">
+                        🌱 Claude Sonnet 4 · 대영이 전용 멘토
+                    </span>
+                </div>
+            </section>
+
+            <!-- ========== 통번역 도구 추천 ========== -->
+            <section class="view" id="view-tools">
+                <header class="view-header">
+                    <h2>🛠️ 통번역사 필수 도구</h2>
+                    <p style="font-size:13px;color:var(--text-secondary);">전문 통번역사를 위한 AI & CAT Tool 가이드</p>
+                </header>
+
+                <!-- CAT Tools -->
+                <div class="dash-card tool-category-card" style="margin-bottom:20px;">
+                    <h3 style="margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:24px;">🖥️</span> CAT Tools (번역 보조 도구)
+                    </h3>
+                    <div class="tool-grid">
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>SDL Trados Studio</strong>
+                                <span class="tool-badge tool-pro">업계 표준</span>
+                            </div>
+                            <p>가장 오래되고 강력한 CAT 도구. 번역 메모리, 용어 관리, 100+ 파일 형식 지원. 대규모 다국어 프로젝트에 필수.</p>
+                            <div class="tool-tags"><span>TM</span><span>용어관리</span><span>QA</span><span>클라우드</span></div>
+                            <div class="tool-price">💰 $260~/년 (Freelance) · $460~ (Pro)</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>memoQ</strong>
+                                <span class="tool-badge tool-rec">추천</span>
+                            </div>
+                            <p>직관적 UI, 강력한 협업 기능, 기계번역 연동 우수. 초보자부터 에이전시까지 폭넓게 사용.</p>
+                            <div class="tool-tags"><span>직관적</span><span>협업</span><span>MT연동</span><span>실시간 미리보기</span></div>
+                            <div class="tool-price">💰 $770 (영구 라이선스) · 구독제 별도</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>Smartcat</strong>
+                                <span class="tool-badge tool-free">무료 플랜</span>
+                            </div>
+                            <p>클라우드 기반 올인원. CAT + 프로젝트 관리 + 결제까지. 50만+ 번역가 마켓플레이스 보유.</p>
+                            <div class="tool-tags"><span>클라우드</span><span>무료</span><span>마켓플레이스</span><span>280+언어</span></div>
+                            <div class="tool-price">💰 프리랜서 무료 · 팀/기업 유료</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>Wordfast Pro</strong>
+                                <span class="tool-badge tool-free">가벼움</span>
+                            </div>
+                            <p>가볍고 크로스 플랫폼 지원. 핵심 CAT 기능을 타이트한 일정에 맞춰 빠르게 활용 가능.</p>
+                            <div class="tool-tags"><span>가벼움</span><span>크로스플랫폼</span><span>TM</span></div>
+                            <div class="tool-price">💰 $460 (영구) · 교육용 할인</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 번역 도구 -->
+                <div class="dash-card tool-category-card" style="margin-bottom:20px;">
+                    <h3 style="margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:24px;">🤖</span> AI 번역/품질 도구
+                    </h3>
+                    <div class="tool-grid">
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>DeepL Pro</strong>
+                                <span class="tool-badge tool-rec">추천</span>
+                            </div>
+                            <p>유럽어 최고 품질. 맞춤 용어집, 번역 메모리, 톤 조절(격식체/비격식체). 법률/마케팅 번역에 특히 강력.</p>
+                            <div class="tool-tags"><span>고품질</span><span>용어집</span><span>톤조절</span><span>포맷유지</span></div>
+                            <div class="tool-price">💰 €8.99~/월 (Starter) · API 별도</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>Claude / GPT-4</strong>
+                                <span class="tool-badge tool-pro">LLM</span>
+                            </div>
+                            <p>대규모 언어모델을 활용한 문맥 기반 번역. 톤/스타일/도메인 커스텀이 자유롭고, 포스트에디팅에 탁월.</p>
+                            <div class="tool-tags"><span>맥락이해</span><span>커스텀</span><span>MTPE</span><span>다용도</span></div>
+                            <div class="tool-price">💰 $20~/월 (각 Pro 플랜) · API 종량제</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>OpenL Translate</strong>
+                                <span class="tool-badge tool-free">무료 크레딧</span>
+                            </div>
+                            <p>100+ 언어 AI 번역. 문서/이미지/오디오 번역 지원. 문법 교정 및 언어 학습 기능 내장.</p>
+                            <div class="tool-tags"><span>100+언어</span><span>문서번역</span><span>학습기능</span></div>
+                            <div class="tool-price">💰 일 30회 무료 · $9.99~/월 Pro</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 통역 도구 -->
+                <div class="dash-card tool-category-card" style="margin-bottom:20px;">
+                    <h3 style="margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:24px;">🎙️</span> 실시간 통역/회의 도구
+                    </h3>
+                    <div class="tool-grid">
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>Interprefy</strong>
+                                <span class="tool-badge tool-pro">엔터프라이즈</span>
+                            </div>
+                            <p>대규모 다국어 이벤트 전문. AI 음성 번역 + 원격 동시통역 + 실시간 자막. 글로벌 컨퍼런스 필수.</p>
+                            <div class="tool-tags"><span>동시통역</span><span>이벤트</span><span>실시간자막</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>KUDO</strong>
+                                <span class="tool-badge tool-pro">200+언어</span>
+                            </div>
+                            <p>통역사 마켓플레이스 + AI 자막. Zoom/Teams 플러그인. 이벤트 기반 pay-as-you-go 모델.</p>
+                            <div class="tool-tags"><span>마켓플레이스</span><span>Zoom연동</span><span>AI자막</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>Boostlingo</strong>
+                                <span class="tool-badge tool-rec">하이브리드</span>
+                            </div>
+                            <p>AI + 인간 통역 하이브리드. 의료/법률 등 정확도가 중요한 분야에서 강력. 130+ 언어 실시간 자막.</p>
+                            <div class="tool-tags"><span>하이브리드</span><span>의료/법률</span><span>130+언어</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 부가 도구 -->
+                <div class="dash-card tool-category-card">
+                    <h3 style="margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:24px;">📦</span> 부가 생산성 도구
+                    </h3>
+                    <div class="tool-grid">
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>Grammarly / ProWritingAid</strong>
+                            </div>
+                            <p>영어 번역문 문법/스타일 교정. 톤 감지, 표절 검사, 가독성 점수. 포스트에디팅 필수 도구.</p>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>Notion / Obsidian</strong>
+                            </div>
+                            <p>번역 프로젝트 관리 + 용어 정리 + 레퍼런스 아카이빙. 개인 용어 데이터베이스 구축에 활용.</p>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-header">
+                                <strong>Otter.ai / Notta</strong>
+                            </div>
+                            <p>음성 녹음 자동 전사. 통역 연습 후 자기 평가, 회의 기록 정리에 유용.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== 아카이브 ========== -->
+            <section class="view" id="view-archive">
+                <header class="view-header">
+                    <h2>🗂️ 아카이브</h2>
+                    <select id="archive-filter">
+                        <option value="all">전체</option>
+                        <option value="translation">번역</option>
+                        <option value="interpretation">통역</option>
+                    </select>
+                </header>
+                <div id="archive-list" class="archive-list"></div>
+            </section>
+
+            <!-- ========== 업적 ========== -->
+            <section class="view" id="view-achievements">
+                <header class="view-header">
+                    <h2>🏆 업적 & 뱃지</h2>
+                </header>
+
+                <div class="achievements-summary">
+                    <div class="ach-stat">
+                        <span class="ach-num" id="ach-unlocked">0</span>
+                        <span class="ach-label">획득</span>
+                    </div>
+                    <div class="ach-stat">
+                        <span class="ach-num" id="ach-total">0</span>
+                        <span class="ach-label">전체</span>
+                    </div>
+                    <div class="ach-stat">
+                        <span class="ach-num" id="ach-percent">0%</span>
+                        <span class="ach-label">달성률</span>
+                    </div>
+                </div>
+
+                <div class="achievements-tabs">
+                    <button class="ach-tab active" data-tab="all">전체</button>
+                    <button class="ach-tab" data-tab="streak">연속</button>
+                    <button class="ach-tab" data-tab="count">횟수</button>
+                    <button class="ach-tab" data-tab="special">특별</button>
+                </div>
+
+                <div id="achievements-grid" class="achievements-grid"></div>
+            </section>
+
+            <!-- ========== 꾸미기 ========== -->
+            <section class="view" id="view-customize">
+                <header class="view-header">
+                    <h2>🎨 테마 설정</h2>
+                </header>
+
+                <div class="customize-grid">
+                    <!-- 프로필 -->
+                    <div class="custom-card">
+                        <h3>👤 프로필</h3>
+                        <div class="custom-field">
+                            <label>닉네임</label>
+                            <input type="text" id="custom-nickname" placeholder="DAYOUNG" maxlength="20">
+                        </div>
+                        <div class="custom-field">
+                            <label>마스코트</label>
+                            <div class="mascot-select">
+                                <button class="mascot-opt active" data-mascot="🦜" onclick="selectMascot('🦜')">🦜</button>
+                                <button class="mascot-opt" data-mascot="🐱" onclick="selectMascot('🐱')">🐱</button>
+                                <button class="mascot-opt" data-mascot="🦊" onclick="selectMascot('🦊')">🦊</button>
+                                <button class="mascot-opt" data-mascot="🐻" onclick="selectMascot('🐻')">🐻</button>
+                                <button class="mascot-opt" data-mascot="🐰" onclick="selectMascot('🐰')">🐰</button>
+                                <button class="mascot-opt" data-mascot="🐶" onclick="selectMascot('🐶')">🐶</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 테마 -->
+                    <div class="custom-card">
+                        <h3>🎨 테마</h3>
+                        <div class="theme-select">
+                            <button class="theme-opt" data-theme="light" onclick="setTheme('light')">
+                                <span class="theme-preview light"></span>
+                                <span>라이트</span>
+                            </button>
+                            <button class="theme-opt active" data-theme="dark" onclick="setTheme('dark')">
+                                <span class="theme-preview dark"></span>
+                                <span>다크</span>
+                            </button>
+                            <button class="theme-opt" data-theme="pastel" onclick="setTheme('pastel')">
+                                <span class="theme-preview pastel"></span>
+                                <span>파스텔</span>
+                            </button>
+                            <button class="theme-opt" data-theme="ocean" onclick="setTheme('ocean')">
+                                <span class="theme-preview ocean"></span>
+                                <span>바다</span>
+                            </button>
+                            <button class="theme-opt" data-theme="forest" onclick="setTheme('forest')">
+                                <span class="theme-preview forest"></span>
+                                <span>숲</span>
+                            </button>
+                            <button class="theme-opt" data-theme="sakura" onclick="setTheme('sakura')">
+                                <span class="theme-preview sakura"></span>
+                                <span>벚꽃</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="customize-actions">
+                    <button class="btn btn-primary btn-lg" onclick="saveCustomization()">
+                        💾 저장하기
+                    </button>
+                </div>
+            </section>
+
+            <!-- ========== 설정 ========== -->
+            <section class="view" id="view-settings">
+                <header class="view-header">
+                    <h2>⚙️ 설정</h2>
+                </header>
+
+                <div class="settings-grid">
+                    <!-- 학습 설정 -->
+                    <div class="settings-card">
+                        <h3>📚 학습 설정</h3>
+                        <div class="setting-item">
+                            <label>일일 학습 목표 (분)</label>
+                            <input type="number" id="set-goal" min="10" max="300" value="60">
+                        </div>
+                        <div class="setting-item">
+                            <label>TTS 속도</label>
+                            <input type="range" id="set-tts-speed" min="0.5" max="1.5" step="0.1" value="0.9">
+                            <span id="tts-speed-val">0.9x</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSettings()">💾 설정 저장</button>
+                    </div>
+
+                    <!-- AI 연동 상태 -->
+                    <div class="settings-card">
+                        <h3>🤖 AI 연동 상태</h3>
+                        <div class="setting-item">
+                            <p style="color: var(--accent-primary);">✅ Google Cloud 프록시 연결됨</p>
+                            <small>GPT-4o-mini / Claude Sonnet 4 사용 가능</small>
+                        </div>
+                        <div class="setting-item">
+                            <label>기사 자동 업데이트</label>
+                            <small>Firebase Functions로 매일 자동 생성됩니다</small>
+                        </div>
+                    </div>
+
+                    <!-- D-Day 설정 -->
+                    <div class="settings-card">
+                        <h3>📅 D-Day 설정</h3>
+                        <div class="setting-item">
+                            <label>목표 이름</label>
+                            <input type="text" id="set-dday-name" placeholder="통번역 대학원 시험">
+                        </div>
+                        <div class="setting-item">
+                            <label>목표 날짜</label>
+                            <input type="date" id="set-dday-date">
+                        </div>
+                        <button class="btn btn-secondary" onclick="saveDday()">D-Day 저장</button>
+                    </div>
+
+                    <!-- 데이터 관리 -->
+                    <div class="settings-card">
+                        <h3>💾 데이터 관리</h3>
+                        <div class="setting-buttons">
+                            <button class="btn btn-secondary" onclick="exportData()">📤 데이터 내보내기</button>
+                            <button class="btn btn-secondary" onclick="importData()">📥 데이터 가져오기</button>
+                            <button class="btn btn-danger" onclick="resetData()">🗑️ 데이터 초기화</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ========== 모달들 ========== -->
+    
+    <!-- 단어 추가 모달 -->
+    <div class="modal" id="word-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 단어 추가</h3>
+                <button class="modal-close" onclick="closeWordModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>영어</label>
+                    <input type="text" id="nw-en" placeholder="English">
+                </div>
+                <div class="form-group">
+                    <label>한국어</label>
+                    <input type="text" id="nw-kr" placeholder="한국어">
+                </div>
+                <div class="form-group">
+                    <label>품사</label>
+                    <select id="nw-pos">
+                        <option value="">선택</option>
+                        <option value="n">명사</option>
+                        <option value="v">동사</option>
+                        <option value="adj">형용사</option>
+                        <option value="adv">부사</option>
+                        <option value="phrase">구문</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>예문</label>
+                    <textarea id="nw-ex" placeholder="예문을 입력하세요"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeWordModal()">취소</button>
+                <button class="btn btn-primary" onclick="addWord()">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 기사 업데이트 모달 -->
+    <div class="modal" id="article-update-modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>🔄 새 기사 가져오기</h3>
+                <button class="modal-close" onclick="closeArticleUpdateModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <p style="margin:0; color: #856404; font-size: 13px;">
+                        ⚠️ <strong>AI 환각 방지</strong>: 직접 입력하신 기사는 원문 그대로 저장됩니다.<br>
+                        GPT는 번역과 용어 추출만 담당합니다.
+                    </p>
+                </div>
+                <div class="update-options">
+                    <div class="update-option" onclick="generateAIArticle()" style="border: 2px solid var(--accent-primary); background: rgba(99,102,241,0.05);">
+                        <div class="opt-icon">✨</div>
+                        <h4>⭐ AI 기사 생성 (추천)</h4>
+                        <p>GPT가 오늘 날짜 기사를 즉시 생성 + 번역</p>
+                        <small style="color: #10b981; font-weight: 600;">✓ 가장 쉽고 빠름</small>
+                    </div>
+                    <div class="update-option" onclick="updateManual()">
+                        <div class="opt-icon">✍️</div>
+                        <h4>직접 입력</h4>
+                        <p>기사 복사/붙여넣기 → 원문 100% 유지</p>
+                        <small style="color: #6c757d;">GPT는 번역만 담당</small>
+                    </div>
+                    <div class="update-option" onclick="updateFromRSS()">
+                        <div class="opt-icon">📡</div>
+                        <h4>GitHub Actions</h4>
+                        <p>NewsAPI 자동 수집 (서버 필요)</p>
+                        <small style="color: #6c757d;">* 3-5분 소요</small>
+                    </div>
+                </div>
+                <div id="update-form-area" style="display:none; margin-top: 20px;">
+                    <!-- 동적 폼 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 기사 상세보기 모달 -->
+    <div class="modal" id="article-detail-modal">
+        <div class="modal-content modal-xl">
+            <div class="modal-header">
+                <div>
+                    <h3 id="article-detail-title">기사 제목</h3>
+                    <div class="article-detail-meta">
+                        <span id="article-detail-date"></span>
+                        <span id="article-detail-source"></span>
+                        <span id="article-detail-stats"></span>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeArticleDetailModal()">×</button>
+            </div>
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <!-- 표시 모드 토글 -->
+                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+                    <button class="btn btn-sm" id="btn-view-separate" onclick="setArticleViewMode('separate')" style="background:var(--accent-primary);color:white;">📄 분리 보기</button>
+                    <button class="btn btn-sm btn-secondary" id="btn-view-inline" onclick="setArticleViewMode('inline')">🔀 문장별 대조</button>
+                    <label style="display:flex;align-items:center;gap:6px;margin-left:auto;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="toggle-ko-inline" onchange="toggleInlineKorean()" style="width:18px;height:18px;">
+                        🇰🇷 한국어 번역 표시
+                    </label>
+                </div>
+                
+                <!-- 분리 보기 모드 -->
+                <div id="article-view-separate">
+                    <div class="article-detail-section">
+                        <h4>🇺🇸 영어 원문</h4>
+                        <div id="article-detail-en" class="article-content"></div>
+                    </div>
+                    <div class="article-detail-section" id="article-detail-ko-section">
+                        <h4>🇰🇷 한국어 번역</h4>
+                        <div id="article-detail-ko" class="article-content"></div>
+                    </div>
+                </div>
+                
+                <!-- 문장별 대조 모드 (인라인) -->
+                <div id="article-view-inline" style="display:none;">
+                    <div class="article-detail-section">
+                        <h4>📖 문장별 읽기 <small style="color:var(--text-secondary);">(각 문장 클릭 시 번역 토글)</small></h4>
+                        <div id="article-detail-inline" class="article-content"></div>
+                    </div>
+                </div>
+                
+                <div class="article-detail-section">
+                    <h4>📖 핵심 용어</h4>
+                    <div id="article-detail-terms" class="key-terms-list"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="btn-start-translate">✍️ 번역 연습 시작</button>
+                <button class="btn btn-accent" id="btn-start-interpret">🎙️ 통역 연습 시작</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 가챠 모달 -->
+    <div class="modal" id="gacha-modal">
+        <div class="modal-content modal-gacha">
+            <div class="modal-header">
+                <h3>🎁 오늘의 가챠</h3>
+                <button class="modal-close" onclick="closeGacha()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="gacha-machine" id="gacha-machine">
+                    <div class="gacha-ball" id="gacha-ball">?</div>
+                </div>
+                <div class="gacha-result" id="gacha-result" style="display:none;">
+                    <div class="gacha-reward" id="gacha-reward"></div>
+                    <p id="gacha-reward-name"></p>
+                </div>
+                <div class="gacha-info">
+                    <p>보유 티켓: <span id="gacha-tickets-modal">0</span>장</p>
+                    <small>학습 완료 시 티켓 획득!</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-lg" id="gacha-pull-btn" onclick="pullGacha()">
+                    🎰 뽑기 (1장)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 아카이브 상세 모달 -->
+    <div class="modal" id="archive-modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="am-title">아카이브</h3>
+                <button class="modal-close" onclick="closeArchiveModal()">×</button>
+            </div>
+            <div class="modal-body" id="am-body"></div>
+            <div class="modal-footer">
+                <textarea id="am-memo" placeholder="메모를 남겨보세요..."></textarea>
+                <button class="btn btn-primary" onclick="saveArchiveMemo()">메모 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 뱃지 획득 모달 -->
+    <div class="modal" id="badge-modal">
+        <div class="modal-content modal-badge">
+            <div class="badge-unlock-animation">
+                <div class="badge-glow"></div>
+                <div class="badge-icon" id="badge-unlock-icon">🏆</div>
+            </div>
+            <h3>🎉 새 뱃지 획득!</h3>
+            <p class="badge-name" id="badge-unlock-name"></p>
+            <p class="badge-desc" id="badge-unlock-desc"></p>
+            <button class="btn btn-primary" onclick="closeBadgeModal()">확인</button>
+        </div>
+    </div>
+
+    <!-- 레벨업 모달 -->
+    <div class="modal" id="levelup-modal">
+        <div class="modal-content modal-levelup">
+            <div class="levelup-animation">
+                <div class="levelup-stars">⭐✨🌟✨⭐</div>
+                <div class="levelup-text">LEVEL UP!</div>
+                <div class="levelup-num" id="levelup-num">2</div>
+            </div>
+            <p class="levelup-title" id="levelup-title">번역 수습생</p>
+            <button class="btn btn-primary" onclick="closeLevelupModal()">확인</button>
+        </div>
+    </div>
+
+    <!-- 운세 모달 -->
+    <div class="modal" id="fortune-modal">
+        <div class="modal-content modal-fortune">
+            <div class="fortune-animation">
+                <div class="fortune-ball">🔮</div>
+            </div>
+            <h3>오늘의 학습 운세</h3>
+            <div class="fortune-result" id="fortune-result"></div>
+            <div class="fortune-lucky">
+                <span>행운의 단어: </span>
+                <strong id="fortune-word"></strong>
+            </div>
+            <button class="btn btn-primary" onclick="closeFortuneModal()">오늘도 파이팅! 💪</button>
+        </div>
+    </div>
+
+    <!-- 토스트 컨테이너 -->
+    <div id="toasts" class="toasts-container"></div>
+
+    <!-- 로딩 -->
+    <div id="loading" class="loading-overlay" style="display:none;">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>로딩중...</p>
+        </div>
+    </div>
+
+    <!-- PWA 설치 버튼 -->
+    <button id="pwa-install-btn" class="pwa-install-btn" onclick="installPWA()">
+        📲 앱 설치
+    </button>
+
+    <!-- 스크립트 -->
+    <script src="js/storage.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/games.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- PWA Service Worker 등록 -->
+    <script>
+        // PWA 설치 프롬프트
+        let deferredPrompt;
+        const pwaInstallBtn = document.getElementById('pwa-install-btn');
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA 설치 가능');
+            e.preventDefault();
+            deferredPrompt = e;
+            pwaInstallBtn.style.display = 'block';
+        });
+        
+        async function installPWA() {
+            if (!deferredPrompt) {
+                // iOS Safari
+                if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                    alert('Safari에서 공유 버튼 → "홈 화면에 추가"를 눌러주세요!');
+                } else {
+                    alert('이미 설치되었거나 설치할 수 없는 환경입니다.');
+                }
+                return;
+            }
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log('PWA 설치 결과:', outcome);
+            
+            if (outcome === 'accepted') {
+                pwaInstallBtn.style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+        
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA 설치 완료!');
+            pwaInstallBtn.style.display = 'none';
+            if (typeof showToast === 'function') {
+                showToast('🎉 앱이 설치되었습니다!', 'success');
+            }
+        });
+        
+        // Service Worker 등록
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW 등록 성공:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('SW 등록 실패:', error);
+                    });
+            });
+        }
+        
+        // iOS Safari 감지하여 설치 안내 표시
+        const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        
+        if (isIOS && !isStandalone) {
+            // iOS에서 PWA로 실행되지 않는 경우
+            setTimeout(() => {
+                pwaInstallBtn.style.display = 'block';
+                pwaInstallBtn.textContent = '📲 홈 화면에 추가';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+/* ===== DAYOUNG's 통번역 스튜디오 - 미니게임 스타일 ===== */
+
+/* ===== 타자 게임 ===== */
+.typing-game { position: relative; width: 100%; height: 400px; background: linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%); border-radius: var(--radius-lg); overflow: hidden; }
+.typing-game-header { display: flex; justify-content: space-between; padding: 16px 20px; background: var(--bg-card); border-bottom: 1px solid var(--border-light); }
+.typing-score, .typing-lives, .typing-level { font-size: 16px; font-weight: 600; }
+.typing-lives { color: var(--error); }
+.typing-area { position: relative; height: 300px; overflow: hidden; }
+.falling-word { position: absolute; padding: 8px 16px; background: var(--accent-primary); color: white; border-radius: 20px; font-size: 14px; font-weight: 500; animation: fall linear forwards; box-shadow: var(--shadow-md); }
+@keyframes fall { from { transform: translateY(-50px); } to { transform: translateY(350px); } }
+.falling-word.matched { animation: wordPop 0.3s ease forwards; background: var(--success); }
+@keyframes wordPop { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(0); opacity: 0; } }
+.typing-input-area { padding: 16px 20px; background: var(--bg-card); border-top: 1px solid var(--border-light); }
+.typing-input { width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 18px; text-align: center; background: var(--bg-primary); color: var(--text-primary); }
+.typing-input:focus { outline: none; border-color: var(--accent-primary); }
+
+/* ===== 매칭 게임 ===== */
+.matching-game { padding: 20px; }
+.matching-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.matching-timer { font-size: 24px; font-weight: 700; color: var(--accent-primary); }
+.matching-moves { font-size: 14px; color: var(--text-secondary); }
+.matching-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 500px; margin: 0 auto; }
+.match-card { aspect-ratio: 1; background: var(--accent-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; font-size: 14px; font-weight: 500; color: transparent; position: relative; overflow: hidden; }
+.match-card::before { content: '?'; position: absolute; font-size: 24px; color: white; }
+.match-card.flipped { background: var(--bg-card); color: var(--text-primary); border: 2px solid var(--accent-primary); }
+.match-card.flipped::before { display: none; }
+.match-card.matched { background: var(--success); color: white; cursor: default; animation: matchPulse 0.5s ease; }
+.match-card.matched::before { content: '✓'; color: white; }
+@keyframes matchPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+/* ===== 스피드 퀴즈 ===== */
+.speed-quiz { text-align: center; padding: 20px; }
+.speed-timer { font-size: 64px; font-weight: 900; color: var(--accent-primary); margin-bottom: 20px; }
+.speed-timer.warning { color: var(--warning); animation: timerPulse 0.5s infinite; }
+.speed-timer.danger { color: var(--error); animation: timerPulse 0.3s infinite; }
+@keyframes timerPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+.speed-score { font-size: 18px; color: var(--text-secondary); margin-bottom: 32px; }
+.speed-question { font-size: 32px; font-weight: 700; margin-bottom: 32px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+.speed-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 500px; margin: 0 auto; }
+.speed-option { padding: 20px; background: var(--bg-tertiary); border: 2px solid transparent; border-radius: var(--radius-lg); font-size: 16px; cursor: pointer; transition: all 0.2s ease; }
+.speed-option:hover { border-color: var(--accent-primary); background: var(--accent-light); }
+.speed-option.correct { background: var(--success); color: white; border-color: var(--success); }
+.speed-option.wrong { background: var(--error); color: white; border-color: var(--error); }
+
+/* ===== 퀴즈 게임 ===== */
+.quiz-game { max-width: 600px; margin: 0 auto; padding: 20px; }
+.quiz-progress { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.quiz-progress-bar { flex: 1; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+.quiz-progress-fill { height: 100%; background: var(--gradient-primary); transition: width 0.3s ease; }
+.quiz-progress-text { font-size: 14px; color: var(--text-secondary); white-space: nowrap; }
+.quiz-question-card { background: var(--bg-card); padding: 32px; border-radius: var(--radius-xl); border: 1px solid var(--border-light); text-align: center; margin-bottom: 24px; }
+.quiz-question { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.quiz-hint { font-size: 14px; color: var(--text-secondary); }
+.quiz-options { display: grid; gap: 12px; }
+.quiz-option { padding: 16px 24px; background: var(--bg-tertiary); border: 2px solid transparent; border-radius: var(--radius-lg); font-size: 16px; cursor: pointer; transition: all 0.2s ease; text-align: left; }
+.quiz-option:hover { border-color: var(--accent-primary); background: var(--accent-light); }
+.quiz-option.correct { background: var(--success) !important; color: white; border-color: var(--success); }
+.quiz-option.wrong { background: var(--error) !important; color: white; border-color: var(--error); }
+
+/* ===== 게임 결과 ===== */
+.game-result { text-align: center; padding: 40px; }
+.game-result-icon { font-size: 64px; margin-bottom: 16px; }
+.game-result-title { font-size: 24px; margin-bottom: 8px; }
+.game-result-score { font-size: 48px; font-weight: 900; color: var(--accent-primary); margin-bottom: 16px; }
+.game-result-info { color: var(--text-secondary); margin-bottom: 24px; }
+.game-result-newbest { color: var(--warning); font-weight: 600; }

@@ -1,0 +1,474 @@
+/* ===== DAYOUNG's 통번역 스튜디오 - 테마 시스템 ===== */
+
+:root {
+    /* 기본 (라이트) 테마 */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    --bg-card: #ffffff;
+    
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-tertiary: #94a3b8;
+    
+    --accent-primary: #6366f1;
+    --accent-secondary: #818cf8;
+    --accent-light: #e0e7ff;
+    
+    --border-color: #e2e8f0;
+    --border-light: #f1f5f9;
+    
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --info: #3b82f6;
+    
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+    
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    
+    --sidebar-bg: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%);
+    --sidebar-text: #ffffff;
+    
+    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --gradient-secondary: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    
+    /* 잔디 색상 */
+    --grass-0: #ebedf0;
+    --grass-1: #9be9a8;
+    --grass-2: #40c463;
+    --grass-3: #30a14e;
+    --grass-4: #216e39;
+    
+    /* 애니메이션 */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+    --transition-slow: 350ms ease;
+}
+
+/* ===== 다크 테마 ===== */
+[data-theme="dark"] {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-card: #1e293b;
+    
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-tertiary: #64748b;
+    
+    --accent-primary: #818cf8;
+    --accent-secondary: #a5b4fc;
+    --accent-light: #312e81;
+    
+    --border-color: #334155;
+    --border-light: #1e293b;
+    
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
+    
+    --sidebar-bg: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+    
+    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --gradient-secondary: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    
+    --grass-0: #161b22;
+    --grass-1: #0e4429;
+    --grass-2: #006d32;
+    --grass-3: #26a641;
+    --grass-4: #39d353;
+}
+
+/* ===== 파스텔 테마 ===== */
+[data-theme="pastel"] {
+    --bg-primary: #fef7ff;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #fdf2f8;
+    --bg-card: #ffffff;
+    
+    --text-primary: #581c87;
+    --text-secondary: #9333ea;
+    --text-tertiary: #c084fc;
+    
+    --accent-primary: #e879f9;
+    --accent-secondary: #f0abfc;
+    --accent-light: #fae8ff;
+    
+    --border-color: #f5d0fe;
+    --border-light: #fae8ff;
+    
+    --sidebar-bg: linear-gradient(180deg, #f0abfc 0%, #c4b5fd 100%);
+    --sidebar-text: #581c87;
+    
+    --gradient-primary: linear-gradient(135deg, #e879f9 0%, #c4b5fd 100%);
+    --gradient-secondary: linear-gradient(135deg, #fdf2f8 0%, #f5f3ff 100%);
+    
+    --grass-0: #fae8ff;
+    --grass-1: #f0abfc;
+    --grass-2: #e879f9;
+    --grass-3: #d946ef;
+    --grass-4: #a855f7;
+}
+
+/* ===== 네온 테마 ===== */
+[data-theme="neon"] {
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #171717;
+    --bg-tertiary: #262626;
+    --bg-card: #171717;
+    
+    --text-primary: #f0fdf4;
+    --text-secondary: #4ade80;
+    --text-tertiary: #22c55e;
+    
+    --accent-primary: #22d3ee;
+    --accent-secondary: #a855f7;
+    --accent-light: #042f2e;
+    
+    --border-color: #22d3ee;
+    --border-light: #0f766e;
+    
+    --sidebar-bg: linear-gradient(180deg, #0f0f0f 0%, #171717 100%);
+    --sidebar-text: #22d3ee;
+    
+    --gradient-primary: linear-gradient(135deg, #22d3ee 0%, #a855f7 100%);
+    --gradient-secondary: linear-gradient(135deg, #171717 0%, #262626 100%);
+    
+    --grass-0: #171717;
+    --grass-1: #065f46;
+    --grass-2: #059669;
+    --grass-3: #10b981;
+    --grass-4: #34d399;
+    
+    --neon-glow: 0 0 10px #22d3ee, 0 0 20px #22d3ee, 0 0 30px #22d3ee;
+}
+
+[data-theme="neon"] .sidebar {
+    border-right: 1px solid #22d3ee;
+    box-shadow: var(--neon-glow);
+}
+
+[data-theme="neon"] .btn-primary {
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+}
+
+[data-theme="neon"] .nav-item.active {
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+}
+
+/* ===== 빈티지 테마 ===== */
+[data-theme="vintage"] {
+    --bg-primary: #faf6f1;
+    --bg-secondary: #fffbf5;
+    --bg-tertiary: #f5ebe0;
+    --bg-card: #fffbf5;
+    
+    --text-primary: #44403c;
+    --text-secondary: #78716c;
+    --text-tertiary: #a8a29e;
+    
+    --accent-primary: #b45309;
+    --accent-secondary: #d97706;
+    --accent-light: #fef3c7;
+    
+    --border-color: #e7e5e4;
+    --border-light: #f5f5f4;
+    
+    --sidebar-bg: linear-gradient(180deg, #78350f 0%, #92400e 100%);
+    --sidebar-text: #fef3c7;
+    
+    --gradient-primary: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+    --gradient-secondary: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    
+    --grass-0: #f5f5f4;
+    --grass-1: #fde68a;
+    --grass-2: #fbbf24;
+    --grass-3: #f59e0b;
+    --grass-4: #d97706;
+}
+
+[data-theme="vintage"] {
+    font-family: 'Playfair Display', 'Noto Serif KR', serif;
+}
+
+/* ===== 벚꽃 테마 ===== */
+[data-theme="sakura"] {
+    --bg-primary: #fff5f7;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #ffe4e6;
+    --bg-card: #ffffff;
+    
+    --text-primary: #881337;
+    --text-secondary: #be123c;
+    --text-tertiary: #f43f5e;
+    
+    --accent-primary: #fb7185;
+    --accent-secondary: #fda4af;
+    --accent-light: #ffe4e6;
+    
+    --border-color: #fecdd3;
+    --border-light: #ffe4e6;
+    
+    --sidebar-bg: linear-gradient(180deg, #fda4af 0%, #fdba74 100%);
+    --sidebar-text: #881337;
+    
+    --gradient-primary: linear-gradient(135deg, #fb7185 0%, #fdba74 100%);
+    --gradient-secondary: linear-gradient(135deg, #fff1f2 0%, #fef3c7 100%);
+    
+    --grass-0: #ffe4e6;
+    --grass-1: #fecdd3;
+    --grass-2: #fda4af;
+    --grass-3: #fb7185;
+    --grass-4: #f43f5e;
+}
+
+/* ===== 바다 테마 ===== */
+[data-theme="ocean"] {
+    --bg-primary: #f0f9ff;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e0f2fe;
+    --bg-card: #ffffff;
+    
+    --text-primary: #0c4a6e;
+    --text-secondary: #0369a1;
+    --text-tertiary: #0ea5e9;
+    
+    --accent-primary: #0ea5e9;
+    --accent-secondary: #38bdf8;
+    --accent-light: #e0f2fe;
+    
+    --border-color: #bae6fd;
+    --border-light: #e0f2fe;
+    
+    --sidebar-bg: linear-gradient(180deg, #0369a1 0%, #0d9488 100%);
+    --sidebar-text: #f0f9ff;
+    
+    --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+    --gradient-secondary: linear-gradient(135deg, #e0f2fe 0%, #ccfbf1 100%);
+    
+    --grass-0: #e0f2fe;
+    --grass-1: #7dd3fc;
+    --grass-2: #38bdf8;
+    --grass-3: #0ea5e9;
+    --grass-4: #0284c7;
+}
+
+/* ===== 숲 테마 ===== */
+[data-theme="forest"] {
+    --bg-primary: #f0fdf4;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #dcfce7;
+    --bg-card: #ffffff;
+    
+    --text-primary: #14532d;
+    --text-secondary: #166534;
+    --text-tertiary: #22c55e;
+    
+    --accent-primary: #22c55e;
+    --accent-secondary: #4ade80;
+    --accent-light: #dcfce7;
+    
+    --border-color: #bbf7d0;
+    --border-light: #dcfce7;
+    
+    --sidebar-bg: linear-gradient(180deg, #166534 0%, #15803d 100%);
+    --sidebar-text: #f0fdf4;
+    
+    --gradient-primary: linear-gradient(135deg, #22c55e 0%, #84cc16 100%);
+    --gradient-secondary: linear-gradient(135deg, #dcfce7 0%, #ecfccb 100%);
+    
+    --grass-0: #dcfce7;
+    --grass-1: #86efac;
+    --grass-2: #4ade80;
+    --grass-3: #22c55e;
+    --grass-4: #16a34a;
+}
+
+/* ===== 배경 효과 ===== */
+.bg-effects {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.bg-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at top right, var(--accent-light) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom left, var(--accent-light) 0%, transparent 50%);
+    opacity: 0.5;
+}
+
+.bg-gradient.hidden {
+    display: none;
+}
+
+.bg-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.bg-particles.hidden {
+    display: none;
+}
+
+.particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: float 15s infinite ease-in-out;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) translateX(0);
+        opacity: 0.3;
+    }
+    25% {
+        transform: translateY(-100px) translateX(50px);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(-50px) translateX(-30px);
+        opacity: 0.3;
+    }
+    75% {
+        transform: translateY(-150px) translateX(20px);
+        opacity: 0.5;
+    }
+}
+
+.bg-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 1px 1px, var(--border-color) 1px, transparent 0);
+    background-size: 40px 40px;
+    opacity: 0.3;
+}
+
+.bg-pattern.hidden {
+    display: none;
+}
+
+/* ===== 네온 테마 특수 효과 ===== */
+[data-theme="neon"] .bg-gradient {
+    background: 
+        radial-gradient(ellipse at top right, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom left, rgba(168, 85, 247, 0.1) 0%, transparent 50%);
+}
+
+[data-theme="neon"] .particle {
+    background: #22d3ee;
+    box-shadow: 0 0 10px #22d3ee;
+}
+
+/* ===== 벚꽃 테마 특수 효과 ===== */
+[data-theme="sakura"] .particle {
+    background: #fb7185;
+    width: 10px;
+    height: 10px;
+    border-radius: 50% 0 50% 50%;
+    transform: rotate(45deg);
+}
+
+@keyframes sakura-fall {
+    0% {
+        transform: translateY(-10px) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+[data-theme="sakura"] .particle {
+    animation: sakura-fall 10s infinite linear;
+}
+
+/* ===== 잔디 색상 적용 ===== */
+.grass-level[data-level="0"] { background: var(--grass-0); }
+.grass-level[data-level="1"] { background: var(--grass-1); }
+.grass-level[data-level="2"] { background: var(--grass-2); }
+.grass-level[data-level="3"] { background: var(--grass-3); }
+.grass-level[data-level="4"] { background: var(--grass-4); }
+
+.grass-day[data-level="0"] { background: var(--grass-0); }
+.grass-day[data-level="1"] { background: var(--grass-1); }
+.grass-day[data-level="2"] { background: var(--grass-2); }
+.grass-day[data-level="3"] { background: var(--grass-3); }
+.grass-day[data-level="4"] { background: var(--grass-4); }
+
+/* ===== 집중 몰입 모드 - 다크 테마 강화 ===== */
+[data-theme="dark"] .dash-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(51, 65, 85, 0.5);
+}
+[data-theme="dark"] .dash-card:hover {
+    border-color: rgba(129, 140, 248, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), 0 0 1px rgba(129, 140, 248, 0.1);
+}
+
+/* 부드러운 그라데이션 배경 */
+[data-theme="dark"] .main-content {
+    background: linear-gradient(180deg, #0f172a 0%, #131c31 50%, #0f172a 100%);
+}
+
+/* 사이드바 글로우 */
+[data-theme="dark"] .sidebar {
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+/* 포커스 링 부드럽게 */
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus {
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2), 0 0 15px rgba(129, 140, 248, 0.05);
+}
+
+/* 스크롤바 다크 모드 */
+[data-theme="dark"] ::-webkit-scrollbar { width: 6px; height: 6px; }
+[data-theme="dark"] ::-webkit-scrollbar-track { background: transparent; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 3px; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.35); }
+
+/* 버튼 글로우 효과 */
+[data-theme="dark"] .btn-primary {
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+[data-theme="dark"] .btn-primary:hover {
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+}
+
+/* 모바일 네비게이션 */
+[data-theme="dark"] .mobile-nav {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(51, 65, 85, 0.5);
+}
